@@ -10,6 +10,8 @@ node_modules/
 # Build
 dist/
 *.local
+vite.config.js
+vite.config.d.ts
 
 # TypeScript
 *.tsbuildinfo

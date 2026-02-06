@@ -14,11 +14,18 @@ App web para criar e gerenciar demandas/tarefas, com formulário de nova demanda
 ## Como rodar
 
 ```bash
-npm install
+git clone https://github.com/narleysousa/ApadrinhaParana.git
+cd ApadrinhaParana
+npm ci
 npm run dev
 ```
 
 Abra no navegador o endereço indicado (geralmente `http://localhost:5173`).
+
+## Pré-requisitos
+
+- Node.js 20+ (arquivo `.nvmrc` incluído)
+- npm 10+
 
 ## Build
 
@@ -28,9 +35,15 @@ npm run build
 
 Arquivos de produção ficam em `dist/`.
 
+## Scripts disponíveis
+
+- `npm run dev`: inicia ambiente local com hot reload.
+- `npm run typecheck`: valida tipos TypeScript sem gerar arquivos.
+- `npm run build`: roda typecheck e gera build de produção.
+- `npm run preview`: serve o build localmente para conferência.
+
 ## Tecnologias
 
 - React 18 + TypeScript
 - Vite 5
 - CSS com variáveis (tema claro, azul)
-# ApadrinhaParana
