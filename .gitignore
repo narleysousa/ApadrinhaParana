@@ -1,5 +1,11 @@
-# Dependências
+# Node
+node/
 node_modules/
+.npm/
+.npmrc
+.yarn/
+.pnp.*
+.yarn-integrity
 
 # Build
 dist/
