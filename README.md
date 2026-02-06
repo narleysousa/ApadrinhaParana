@@ -31,3 +31,4 @@ Arquivos de produção ficam em `dist/`.
 - React 18 + TypeScript
 - Vite 5
 - CSS com variáveis (tema claro, azul)
+# ApadrinhaParana
