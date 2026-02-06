@@ -1,0 +1,157 @@
+.nova-demanda {
+  background: var(--cor-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: var(--sombra-card);
+  border: 1px solid var(--cor-borda);
+}
+
+.nova-demanda-titulo {
+  margin: 0 0 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.nova-demanda-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nova-demanda-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.nova-demanda-input,
+.nova-demanda-select,
+.nova-demanda-textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: var(--cor-card);
+}
+
+.nova-demanda-input:focus,
+.nova-demanda-select:focus,
+.nova-demanda-textarea:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.nova-demanda-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.nova-demanda-projeto-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nova-demanda-select {
+  flex: 1;
+}
+
+.nova-demanda-btn-add {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo);
+  border-radius: 6px;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--cor-texto-sec);
+}
+
+.nova-demanda-btn-add:hover {
+  background: var(--cor-borda);
+  color: var(--cor-texto);
+}
+
+.nova-demanda-novo-projeto {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.nova-demanda-btn-confirmar {
+  padding: 0.5rem 1rem;
+  background: var(--cor-primaria);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nova-demanda-btn-confirmar:hover {
+  background: var(--cor-primaria-hover);
+}
+
+.nova-demanda-responsaveis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nova-demanda-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.nova-demanda-checkbox-item input {
+  width: 16px;
+  height: 16px;
+}
+
+.nova-demanda-btn-criar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--cor-primaria);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.nova-demanda-btn-criar:hover:not(:disabled) {
+  background: var(--cor-primaria-hover);
+}
+
+.nova-demanda-btn-criar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nova-demanda-required {
+  color: var(--cor-alta);
+  margin-left: 0.15rem;
+}
+
+.nova-demanda-btn-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.nova-demanda-obs {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--cor-texto-sec);
+}

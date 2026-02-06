@@ -1,0 +1,97 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--cor-card);
+  border-bottom: 1px solid var(--cor-borda);
+  box-shadow: var(--sombra);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-primaria);
+}
+
+.header-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+}
+
+.header-svg-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.header-titulo {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--cor-primaria);
+}
+
+.header-subtitulo {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--cor-texto-sec);
+}
+
+.header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-btn-icon {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--cor-texto-sec);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+
+.header-btn-icon:hover {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+.header-btn-icon .header-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.header-usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cor-primaria);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.header-nome {
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+}

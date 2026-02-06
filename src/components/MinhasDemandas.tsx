@@ -1,0 +1,346 @@
+import { useState, useMemo, useEffect } from 'react'
+import type { Demanda, Responsavel, Agent } from '../types'
+import './MinhasDemandas.css'
+
+const DIAS_DEMANDA_ANTIGA = 14
+const DEBOUNCE_BUSCA_MS = 280
+type AbaDemandas = 'andamento' | 'finalizadas'
+
+interface MinhasDemandasProps {
+  demandas: Demanda[]
+  responsaveis: Responsavel[]
+  agents: Agent[]
+  usuarioAtualId: string
+  onExcluir: (id: string) => void
+  onToggleFinalizada: (id: string) => void
+}
+
+export function MinhasDemandas({
+  demandas,
+  responsaveis,
+  agents,
+  usuarioAtualId,
+  onExcluir,
+  onToggleFinalizada,
+}: MinhasDemandasProps) {
+  const [buscaInput, setBuscaInput] = useState('')
+  const [busca, setBusca] = useState('')
+  const [filtroProjeto, setFiltroProjeto] = useState('todos')
+  const [filtroCategoria, setFiltroCategoria] = useState('todas')
+  const [filtroResponsavel, setFiltroResponsavel] = useState('todos')
+  const [abaDemandas, setAbaDemandas] = useState<AbaDemandas>('andamento')
+
+  useEffect(() => {
+    const t = setTimeout(() => setBusca(buscaInput), DEBOUNCE_BUSCA_MS)
+    return () => clearTimeout(t)
+  }, [buscaInput])
+
+  const projetosUnicos = useMemo(() => {
+    const map = new Map<string, { id: string; nome: string }>()
+    demandas.forEach((d) => {
+      if (!map.has(d.projeto.id)) map.set(d.projeto.id, d.projeto)
+    })
+    return Array.from(map.values())
+  }, [demandas])
+
+  const categoriasUnicas = useMemo(() => {
+    const categorias = demandas.map((d) => d.categoria).filter(Boolean)
+    return [...new Set(categorias)].sort()
+  }, [demandas])
+
+  const demandasBaseFiltradas = useMemo(() => {
+    return demandas.filter((d) => {
+      const matchBusca =
+        !busca ||
+        d.titulo.toLowerCase().includes(busca.toLowerCase()) ||
+        d.descricao.toLowerCase().includes(busca.toLowerCase())
+      const matchProjeto =
+        filtroProjeto === 'todos' || d.projeto.id === filtroProjeto
+      const matchCategoria =
+        filtroCategoria === 'todas' || d.categoria === filtroCategoria
+      const matchResponsavel =
+        filtroResponsavel === 'todos' ||
+        (filtroResponsavel === 'eu' && d.responsaveis.some((r) => r.id === usuarioAtualId)) ||
+        d.responsaveis.some((r) => r.id === filtroResponsavel)
+      return (
+        matchBusca &&
+        matchProjeto &&
+        matchCategoria &&
+        matchResponsavel
+      )
+    })
+  }, [
+    demandas,
+    busca,
+    filtroProjeto,
+    filtroCategoria,
+    filtroResponsavel,
+    usuarioAtualId,
+  ])
+
+  const demandasFiltradas = useMemo(() => {
+    return demandasBaseFiltradas.filter((d) =>
+      abaDemandas === 'andamento' ? !d.finalizada : d.finalizada
+    )
+  }, [demandasBaseFiltradas, abaDemandas])
+
+  const resumo = useMemo(() => {
+    const ativas = demandas.filter((d) => !d.finalizada)
+    return {
+      total: ativas.length,
+      alta: ativas.filter((d) => d.prioridade === 'ALTA').length,
+      media: ativas.filter((d) => d.prioridade === 'MÉDIA').length,
+      baixa: ativas.filter((d) => d.prioridade === 'BAIXA').length,
+    }
+  }, [demandas])
+
+  const demandasAntigas = useMemo(() => {
+    const agora = new Date()
+    return demandas.filter((d) => {
+      if (d.finalizada) return false
+      const criada = new Date(d.criadaEm)
+      const dias = (agora.getTime() - criada.getTime()) / (1000 * 60 * 60 * 24)
+      return dias >= DIAS_DEMANDA_ANTIGA
+    })
+  }, [demandas])
+
+  const contagemAbertas = useMemo(
+    () => demandas.filter((d) => !d.finalizada).length,
+    [demandas]
+  )
+  const contagemFinalizadas = useMemo(
+    () => demandas.filter((d) => d.finalizada).length,
+    [demandas]
+  )
+
+  return (
+    <div className="minhas-demandas">
+      <section className="minhas-demandas-resumo">
+        <h2 className="minhas-demandas-titulo">Minhas Demandas</h2>
+        <p className="minhas-demandas-total">{resumo.total} demandas</p>
+        <div className="minhas-demandas-caixas">
+          <div className="minhas-demandas-caixa minhas-demandas-caixa-alta">
+            {resumo.alta} ALTA
+          </div>
+          <div className="minhas-demandas-caixa minhas-demandas-caixa-media">
+            {resumo.media} MÉDIA
+          </div>
+          <div className="minhas-demandas-caixa minhas-demandas-caixa-baixa">
+            {resumo.baixa} BAIXA
+          </div>
+        </div>
+      </section>
+
+      {demandasAntigas.length > 0 && (
+        <section className="minhas-demandas-alerta">
+          <h3 className="minhas-demandas-alerta-titulo">
+            Atenção: Demanda Antiga
+          </h3>
+          {demandasAntigas.slice(0, 3).map((d) => (
+            <div key={d.id} className="minhas-demandas-alerta-item">
+              <span className="minhas-demandas-alerta-icon">⏱</span>
+              <div>
+                <p className="minhas-demandas-alerta-nome">{d.titulo}</p>
+                <p className="minhas-demandas-alerta-data">
+                  Criada em {new Date(d.criadaEm).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <section className="minhas-tarefas">
+        <h2 className="minhas-tarefas-titulo">
+          <span className="minhas-tarefas-icon">📋</span>
+          Minhas Tarefas
+        </h2>
+        <div className="minhas-tarefas-status">
+          <button
+            type="button"
+            className={`minhas-tarefas-btn ${abaDemandas === 'andamento' ? 'ativo' : ''}`}
+            onClick={() => setAbaDemandas('andamento')}
+            aria-pressed={abaDemandas === 'andamento'}
+          >
+            Em andamento ({contagemAbertas})
+          </button>
+          <button
+            type="button"
+            className={`minhas-tarefas-btn ${abaDemandas === 'finalizadas' ? 'ativo' : ''}`}
+            onClick={() => setAbaDemandas('finalizadas')}
+            aria-pressed={abaDemandas === 'finalizadas'}
+          >
+            Finalizadas ({contagemFinalizadas})
+          </button>
+        </div>
+
+        <div className="minhas-tarefas-filtros">
+          <div className="minhas-tarefas-busca">
+            <span className="minhas-tarefas-busca-icon">🔍</span>
+            <input
+              type="search"
+              value={buscaInput}
+              onChange={(e) => setBuscaInput(e.target.value)}
+              className="minhas-tarefas-input"
+              aria-label="Buscar demandas"
+            />
+          </div>
+          <div className="minhas-tarefas-botoes">
+            <select
+              value={filtroProjeto}
+              onChange={(e) => setFiltroProjeto(e.target.value)}
+              className="minhas-tarefas-select"
+              aria-label="Filtrar por projeto"
+            >
+              <option value="todos">Todos Projetos</option>
+              {projetosUnicos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nome}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              className="minhas-tarefas-select"
+              aria-label="Filtrar por categoria"
+            >
+              <option value="todas">Todas Categorias</option>
+              {categoriasUnicas.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="minhas-tarefas-responsavel">
+            <span>Responsável:</span>
+            <select
+              value={filtroResponsavel}
+              onChange={(e) => setFiltroResponsavel(e.target.value)}
+              className="minhas-tarefas-select"
+              aria-label="Filtrar por responsável"
+            >
+              <option value="todos">Todos</option>
+              <option value="eu">Eu</option>
+              {responsaveis
+                .filter((r) => r.id !== usuarioAtualId)
+                .map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.nome}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+
+        <ul className="minhas-tarefas-lista">
+          {demandasFiltradas.map((d) => {
+            return (
+              <li
+                key={d.id}
+                className={`minhas-tarefas-card ${d.finalizada ? 'finalizada' : ''}`}
+              >
+                <div className="minhas-tarefas-card-topo">
+                  <h3 className="minhas-tarefas-card-titulo">{d.titulo}</h3>
+                  <span
+                    className={`minhas-tarefas-card-prioridade prioridade-${d.prioridade === 'ALTA' ? 'alta' : d.prioridade === 'MÉDIA' ? 'media' : 'baixa'
+                      }`}
+                    title={`Prioridade ${d.prioridade}`}
+                  >
+                    {d.prioridade}
+                  </span>
+                </div>
+                <div className="minhas-tarefas-card-meta">
+                  <span className="minhas-tarefas-card-projeto">
+                    {d.projeto.nome.length > 24
+                      ? `${d.projeto.nome.slice(0, 24)}...`
+                      : d.projeto.nome}
+                  </span>
+                  {d.categoria && (
+                    <span className="minhas-tarefas-card-categoria" title={d.categoria}>
+                      {d.categoria}
+                    </span>
+                  )}
+                  {d.agentId && (() => {
+                    const cidade = agents.find(a => a.id === d.agentId)
+                    return cidade ? (
+                      <span className="minhas-tarefas-card-cidade" title={cidade.nome}>
+                        📍 {cidade.nome}
+                      </span>
+                    ) : null
+                  })()}
+                </div>
+                {d.descricao && (
+                  <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
+                )}
+                <div className="minhas-tarefas-card-responsaveis">
+                  {d.responsaveis.map((r) => (
+                    <span
+                      key={r.id}
+                      className="minhas-tarefas-card-avatar"
+                      title={r.nome}
+                    >
+                      {r.iniciais}
+                    </span>
+                  ))}
+                  <span className="minhas-tarefas-card-resp-texto">
+                    {d.responsaveis.length} Resp.
+                    {d.responsaveis.some((r) => r.id === usuarioAtualId)
+                      ? ' (Você)'
+                      : ''}
+                  </span>
+                </div>
+                <div className="minhas-tarefas-card-acoes">
+                  <button
+                    type="button"
+                    className="minhas-tarefas-card-btn"
+                    onClick={() => onToggleFinalizada(d.id)}
+                    title={d.finalizada ? 'Reabrir atividade' : 'Marcar como finalizada'}
+                    aria-label={d.finalizada ? 'Reabrir atividade' : 'Marcar como finalizada'}
+                  >
+                    {d.finalizada ? '↩' : '✓'}
+                  </button>
+                  <button
+                    type="button"
+                    className="minhas-tarefas-card-btn excluir"
+                    onClick={() => onExcluir(d.id)}
+                    title="Excluir atividade"
+                    aria-label="Excluir atividade"
+                  >
+                    🗑
+                  </button>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        {demandasFiltradas.length === 0 && (
+          <div className="minhas-tarefas-vazio" role="status">
+            <p>
+              {demandas.length === 0
+                ? 'Nenhuma demanda ainda. Crie a primeira usando o formulário ao lado.'
+                : abaDemandas === 'andamento'
+                  ? 'Nenhuma tarefa em andamento com os filtros aplicados.'
+                  : 'Nenhuma tarefa finalizada com os filtros aplicados.'}
+            </p>
+            {demandas.length === 0 && (
+              <button
+                type="button"
+                className="minhas-tarefas-vazio-cta"
+                onClick={() =>
+                  document.getElementById('form-nova-demanda')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                  })
+                }
+              >
+                Criar primeira demanda
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+    </div>
+  )
+}
