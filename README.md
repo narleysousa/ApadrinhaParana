@@ -13,12 +13,14 @@ App web para criar e gerenciar demandas/tarefas, com formulário de nova demanda
 3. A cada push na branch `main`, o workflow **Deploy to GitHub Pages** faz o build e publica o site.
 4. Se o deploy falhar, abra a aba **Actions**, clique na execução com erro e confira a mensagem.
 5. Para repositório de projeto, abra com `/NOME_DO_REPO/` no final da URL (ex.: `/ApadrinhaParana/`).
+6. Em **Settings → Actions → General**, deixe **Workflow permissions** em **Read and write permissions**.
 
 ### Checklist rápido de erro 404
 
 - Se você abrir `https://narleysousa.github.io/` e receber 404, isso é esperado sem um repositório `narleysousa.github.io`.
 - O app deste repo publica em `https://narleysousa.github.io/ApadrinhaParana/`.
-- O caminho base do build é detectado automaticamente no GitHub Actions pelo nome do repositório.
+- O build usa caminhos relativos, compatível com GitHub Pages em subpasta.
+- Se o Pages estiver configurado para servir a branch em vez do artifact do Actions, a raiz redireciona para `dist/`.
 
 **Site na raiz (narleysousa.github.io):**  
 Se quiser que `narleysousa.github.io` redirecione para o app:
