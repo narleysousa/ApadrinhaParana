@@ -2,7 +2,23 @@
 
 App web para criar e gerenciar demandas/tarefas, com formulário de nova demanda e lista de minhas tarefas com filtros.
 
-**Site (GitHub Pages):** [https://narleysousa.github.io/ApadrinhaParana/](https://narleysousa.github.io/ApadrinhaParana/)
+**Site (GitHub Pages):** **[https://narleysousa.github.io/ApadrinhaParana/](https://narleysousa.github.io/ApadrinhaParana/)**
+
+> Use sempre o link acima. O endereço `narleysousa.github.io` (sem `/ApadrinhaParana/`) só funciona se você configurar o redirect (veja abaixo).
+
+## Deploy no GitHub Pages
+
+1. No repositório **ApadrinhaParana**, vá em **Settings** → **Pages**.
+2. Em **Build and deployment** → **Source**, escolha **GitHub Actions** (não use "Deploy from a branch").
+3. A cada push na branch `main`, o workflow **Deploy to GitHub Pages** faz o build e publica o site.
+4. Se o deploy falhar, abra a aba **Actions**, clique na execução com erro e confira a mensagem.
+
+**Site na raiz (narleysousa.github.io):**  
+Se quiser que `narleysousa.github.io` redirecione para o app:
+- Crie um repositório **narleysousa/narleysousa.github.io**.
+- Copie o conteúdo de `docs/user-site-index.html` para um arquivo `index.html` na raiz desse repositório.
+- Em **Settings** → **Pages** desse repo, use **Deploy from a branch**, branch `main`, pasta `/ (root)`.
+- Assim, ao acessar `narleysousa.github.io`, o navegador será redirecionado para o app.
 
 ## Funcionalidades
 
