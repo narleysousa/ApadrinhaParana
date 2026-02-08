@@ -6,41 +6,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Gestão de demandas e agentes - Apadrinha Paraná" />
     <title>Gestão de Demandas - Apadrinha Paraná</title>
+    <style>
+      .app-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #1e293b;
+      }
+      .app-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      .app-loading-text {
+        margin-top: 1rem;
+        font-size: 1rem;
+        color: #64748b;
+      }
+      .app-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #1e293b;
+        padding: 2rem;
+        text-align: center;
+      }
+      .app-error-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .app-error-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+      .app-error-message {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        max-width: 400px;
+      }
+      .app-error-btn {
+        padding: 0.75rem 1.5rem;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .app-error-btn:hover {
+        background: #1d4ed8;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <a href="#main" class="skip-link">Ir para o conteúdo</a>
-    <div id="root"></div>
-    <script type="module">
-      import('./src/main.tsx').catch(async () => {
-        const isGitHubPages = window.location.hostname.endsWith('github.io')
-        const alreadyInDist = window.location.pathname.includes('/dist/')
-
-        if (isGitHubPages && !alreadyInDist) {
-          try {
-            const response = await fetch('./dist/index.html', {
-              method: 'HEAD',
-              cache: 'no-store',
-            })
-
-            if (response.ok) {
-              const pathname = window.location.pathname.endsWith('/')
-                ? window.location.pathname
-                : `${window.location.pathname}/`
-
-              window.location.replace(`${window.location.origin}${pathname}dist/`)
-              return
-            }
-          } catch {
-            // fallback para mensagem abaixo
+    <div id="root">
+      <div class="app-loading">
+        <div class="app-loading-spinner"></div>
+        <p class="app-loading-text">Carregando...</p>
+      </div>
+    </div>
+    <script type="module" src="./src/main.tsx"></script>
+    <script>
+      // Fallback para erros de carregamento
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'SCRIPT') {
+          var root = document.getElementById('root');
+          if (root && !root.querySelector('.app')) {
+            root.innerHTML = 
+              '<div class="app-error">' +
+                '<span class="app-error-icon">⚠️</span>' +
+                '<h1 class="app-error-title">Erro ao carregar o aplicativo</h1>' +
+                '<p class="app-error-message">Houve um problema ao carregar a aplicação. Isso pode acontecer se você está acessando pelo GitHub Pages sem o deploy correto.</p>' +
+                '<button class="app-error-btn" onclick="location.reload()">Tentar novamente</button>' +
+              '</div>';
           }
         }
-
-        const root = document.getElementById('root')
-        if (root) {
-          root.innerHTML =
-            'Falha ao carregar o app no GitHub Pages. Configure Pages em Settings > Pages com Source = GitHub Actions e rode o workflow de deploy novamente.'
-        }
-      })
+      }, true);
     </script>
   </body>
 </html>

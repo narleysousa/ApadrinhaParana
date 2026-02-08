@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Header } from './components/Header'
 import { Login } from './components/Login/Login'
+import { LoadingScreen } from './components/LoadingScreen'
 import { NovaDemanda } from './components/NovaDemanda'
 import { MinhasDemandas } from './components/MinhasDemandas'
 import { Agents } from './components/Agents/Agents'
@@ -24,9 +25,12 @@ import {
   limparUsuarioLogado,
 } from './lib/utils'
 import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/cloud'
+import './components/LoadingScreen.css'
 import './App.css'
 
 type Aba = 'demandas' | 'agentes'
+type StatusSync = 'sincronizado' | 'sincronizando' | 'offline' | 'erro'
+
 const ROTA_DEMANDAS = '#/'
 const ROTA_AGENTS = '#/agents'
 
@@ -85,6 +89,12 @@ function App() {
     return saved
   })
 
+  const [carregandoInicial, setCarregandoInicial] = useState(nuvemHabilitada)
+  const [online, setOnline] = useState(navigator.onLine)
+  const [statusSync, setStatusSync] = useState<StatusSync>(
+    navigator.onLine ? 'sincronizado' : 'offline'
+  )
+
   useEffect(() => {
     const saved = carregarUsuarioLogado()
     if (!saved) return
@@ -93,10 +103,12 @@ function App() {
       salvarUsuarioLogado({ id: atual.id, nome: atual.nome, iniciais: atual.iniciais })
     }
   }, [])
+
   const [aba, setAba] = useState<Aba>(() => {
     if (typeof window === 'undefined') return 'demandas'
     return getAbaPorRota(window.location.hash, window.location.pathname)
   })
+
   const [projetos, setProjetos] = useState<Projeto[]>(() => {
     const saved = carregarProjetos()
     if (Array.isArray(saved)) {
@@ -104,6 +116,7 @@ function App() {
     }
     return normalizarProjetos(PROJETOS_INICIAIS)
   })
+
   const [demandas, setDemandas] = useState<Demanda[]>(() => {
     const saved = carregarDemandas()
     if (Array.isArray(saved)) {
@@ -111,13 +124,35 @@ function App() {
     }
     return normalizarDemandas(getDemandasIniciais())
   })
+
   const [agents, setAgents] = useState<Agent[]>(() => {
     const saved = carregarAgents()
     if (Array.isArray(saved)) return saved as Agent[]
     return []
   })
+
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [nuvemInicializada, setNuvemInicializada] = useState(!nuvemHabilitada)
+
+  // Detectar online/offline
+  useEffect(() => {
+    const handleOnline = () => {
+      setOnline(true)
+      setStatusSync('sincronizado')
+    }
+    const handleOffline = () => {
+      setOnline(false)
+      setStatusSync('offline')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   useEffect(() => {
     salvarProjetos(projetos)
@@ -135,18 +170,25 @@ function App() {
     if (!nuvemHabilitada) return
 
     let ativo = true
-    ;(async () => {
-      const dadosNuvem = await carregarDadosNuvem()
-      if (!ativo) return
+      ; (async () => {
+        try {
+          const dadosNuvem = await carregarDadosNuvem()
+          if (!ativo) return
 
-      if (dadosNuvem) {
-        setProjetos(normalizarProjetos(dadosNuvem.projetos))
-        setDemandas(normalizarDemandas(dadosNuvem.demandas))
-        setAgents(dadosNuvem.agents)
-      }
-
-      setNuvemInicializada(true)
-    })()
+          if (dadosNuvem) {
+            setProjetos(normalizarProjetos(dadosNuvem.projetos))
+            setDemandas(normalizarDemandas(dadosNuvem.demandas))
+            setAgents(dadosNuvem.agents)
+          }
+        } catch (error) {
+          console.error('Erro ao carregar dados da nuvem:', error)
+        } finally {
+          if (ativo) {
+            setNuvemInicializada(true)
+            setCarregandoInicial(false)
+          }
+        }
+      })()
 
     return () => {
       ativo = false
@@ -156,14 +198,26 @@ function App() {
   useEffect(() => {
     if (!nuvemHabilitada || !nuvemInicializada) return
 
+    if (!online) {
+      setStatusSync('offline')
+      return
+    }
+
+    setStatusSync('sincronizando')
+
     const t = window.setTimeout(() => {
-      salvarDadosNuvem({ projetos, demandas, agents }).catch((error) => {
-        console.error('Falha ao salvar dados no Firebase:', error)
-      })
+      salvarDadosNuvem({ projetos, demandas, agents })
+        .then(() => {
+          setStatusSync('sincronizado')
+        })
+        .catch((error) => {
+          console.error('Falha ao salvar dados no Firebase:', error)
+          setStatusSync('erro')
+        })
     }, 650)
 
     return () => window.clearTimeout(t)
-  }, [projetos, demandas, agents, nuvemInicializada])
+  }, [projetos, demandas, agents, nuvemInicializada, online])
 
   useEffect(() => {
     const onRouteChange = () => {
@@ -365,6 +419,11 @@ function App() {
     setUsuarioLogado(null)
   }, [])
 
+  // Mostrar loading durante carregamento inicial da nuvem
+  if (carregandoInicial) {
+    return <LoadingScreen mensagem="Sincronizando dados..." />
+  }
+
   if (!usuarioLogado) {
     return (
       <Login
@@ -374,9 +433,34 @@ function App() {
     )
   }
 
+  const getStatusSyncLabel = () => {
+    switch (statusSync) {
+      case 'sincronizando':
+        return '⟳ Sincronizando...'
+      case 'offline':
+        return '⚡ Offline'
+      case 'erro':
+        return '⚠️ Erro ao sincronizar'
+      default:
+        return '✓ Sincronizado'
+    }
+  }
+
   return (
     <div className="app">
       <Header usuarioAtual={usuarioLogado} onSair={handleSair} />
+
+      {/* Indicador de status */}
+      {nuvemHabilitada && (
+        <div
+          className={`app-status app-status--${statusSync}`}
+          role="status"
+          aria-live="polite"
+        >
+          {getStatusSyncLabel()}
+        </div>
+      )}
+
       <nav className="app-nav" aria-label="Navegação principal">
         <button
           type="button"
