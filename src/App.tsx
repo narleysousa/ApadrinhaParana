@@ -27,8 +27,8 @@ import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/clo
 import './App.css'
 
 type Aba = 'demandas' | 'agentes'
-const ROTA_DEMANDAS = '/'
-const ROTA_AGENTS = '/agents'
+const ROTA_DEMANDAS = '#/'
+const ROTA_AGENTS = '#/agents'
 
 const NOMES_PROJETOS_REMOVIDOS = new Set([
   'em andamento',
@@ -55,9 +55,20 @@ function normalizarPath(pathname: string): string {
   return semBarraFinal === '' ? '/' : semBarraFinal.toLowerCase()
 }
 
-function getAbaPorPath(pathname: string): Aba {
+function normalizarHash(hash: string): string {
+  const semPrefixo = hash.replace(/^#/, '')
+  const semBarraFinal = semPrefixo.replace(/\/+$/, '')
+  const base = semBarraFinal === '' ? '/' : semBarraFinal.toLowerCase()
+  return base.startsWith('/') ? base : `/${base}`
+}
+
+function getAbaPorRota(hash: string, pathname: string): Aba {
+  const rotaHash = normalizarHash(hash)
+  if (rotaHash === '/agents' || rotaHash === '/agentes') return 'agentes'
+
   const path = normalizarPath(pathname)
   if (path === '/agents' || path === '/agentes') return 'agentes'
+  if (path.endsWith('/agents') || path.endsWith('/agentes')) return 'agentes'
   return 'demandas'
 }
 
@@ -84,7 +95,7 @@ function App() {
   }, [])
   const [aba, setAba] = useState<Aba>(() => {
     if (typeof window === 'undefined') return 'demandas'
-    return getAbaPorPath(window.location.pathname)
+    return getAbaPorRota(window.location.hash, window.location.pathname)
   })
   const [projetos, setProjetos] = useState<Projeto[]>(() => {
     const saved = carregarProjetos()
@@ -155,25 +166,38 @@ function App() {
   }, [projetos, demandas, agents, nuvemInicializada])
 
   useEffect(() => {
-    const onPopState = () => {
-      setAba(getAbaPorPath(window.location.pathname))
+    const onRouteChange = () => {
+      setAba(getAbaPorRota(window.location.hash, window.location.pathname))
     }
-    window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
+
+    window.addEventListener('popstate', onRouteChange)
+    window.addEventListener('hashchange', onRouteChange)
+    return () => {
+      window.removeEventListener('popstate', onRouteChange)
+      window.removeEventListener('hashchange', onRouteChange)
+    }
   }, [])
 
   useEffect(() => {
-    const pathEsperado = getPathPorAba(aba)
-    if (window.location.pathname !== pathEsperado) {
-      window.history.replaceState(window.history.state, '', pathEsperado)
+    const rotaEsperada = getPathPorAba(aba)
+    if (window.location.hash !== rotaEsperada) {
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}${rotaEsperada}`
+      )
     }
   }, [aba])
 
   const handleMudarAba = useCallback((novaAba: Aba) => {
     setAba(novaAba)
-    const novoPath = getPathPorAba(novaAba)
-    if (window.location.pathname !== novoPath) {
-      window.history.pushState(window.history.state, '', novoPath)
+    const novaRota = getPathPorAba(novaAba)
+    if (window.location.hash !== novaRota) {
+      window.history.pushState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}${novaRota}`
+      )
     }
   }, [])
 
