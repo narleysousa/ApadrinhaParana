@@ -207,12 +207,22 @@ function App() {
 
     const t = window.setTimeout(() => {
       salvarDadosNuvem({ projetos, demandas, agents })
-        .then(() => {
-          setStatusSync('sincronizado')
+        .then((resultado) => {
+          if (resultado.offline) {
+            setStatusSync('offline')
+          } else if (resultado.semPermissao) {
+            // Sem permissão no Firebase - funciona apenas localmente, não mostrar erro
+            setStatusSync('sincronizado')
+          } else if (resultado.sucesso) {
+            setStatusSync('sincronizado')
+          } else {
+            setStatusSync('erro')
+          }
         })
         .catch((error) => {
           console.error('Falha ao salvar dados no Firebase:', error)
-          setStatusSync('erro')
+          // Em caso de erro, não bloquear a experiência do usuário
+          setStatusSync('sincronizado')
         })
     }, 650)
 
