@@ -266,6 +266,27 @@
   gap: 1rem;
 }
 
+.login-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--cor-texto-sec);
+}
+
+.login-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+.login-checkbox span {
+  user-select: none;
+}
+
 .login-btn-submit {
   margin-top: auto;
   padding: 0.9rem 1.5rem;

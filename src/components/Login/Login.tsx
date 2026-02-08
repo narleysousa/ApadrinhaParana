@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Usuario, Cargo } from '../../types'
 import { CARGOS_DISPONIVEIS } from '../../constants'
 import { cadastrarUsuario, autenticarUsuario } from '../../lib/utils'
@@ -17,6 +17,8 @@ const BENEFICIOS = [
   'Organize por projeto e cidade',
 ]
 
+const CHAVE_EMAIL_LEMBRADO = 'apadrinha-parana-email-lembrado'
+
 export function Login({ onEntrar }: LoginProps) {
   const [aba, setAba] = useState<'entrar' | 'criar'>('entrar')
   const [carregando, setCarregando] = useState(false)
@@ -25,11 +27,21 @@ export function Login({ onEntrar }: LoginProps) {
   // Login
   const [emailLogin, setEmailLogin] = useState('')
   const [senhaLogin, setSenhaLogin] = useState('')
+  const [lembrarLogin, setLembrarLogin] = useState(false)
+
+  // Carregar email lembrado ao iniciar
+  useEffect(() => {
+    const emailSalvo = localStorage.getItem(CHAVE_EMAIL_LEMBRADO)
+    if (emailSalvo) {
+      setEmailLogin(emailSalvo)
+      setLembrarLogin(true)
+    }
+  }, [])
 
   // Cadastro
   const [nome, setNome] = useState('')
   const [emailCadastro, setEmailCadastro] = useState('')
-  const [cargo, setCargo] = useState<Cargo>('Colaborador')
+  const [cargo, setCargo] = useState<Cargo>('Psicóloga')
   const [senhaCadastro, setSenhaCadastro] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
 
@@ -44,6 +56,12 @@ export function Login({ onEntrar }: LoginProps) {
       const resultado = autenticarUsuario(emailLogin, senhaLogin)
 
       if (resultado.sucesso && resultado.usuario) {
+        // Salvar ou remover email lembrado
+        if (lembrarLogin) {
+          localStorage.setItem(CHAVE_EMAIL_LEMBRADO, emailLogin)
+        } else {
+          localStorage.removeItem(CHAVE_EMAIL_LEMBRADO)
+        }
         onEntrar(resultado.usuario)
       } else {
         setErro(resultado.erro || 'Erro ao fazer login')
@@ -90,9 +108,6 @@ export function Login({ onEntrar }: LoginProps) {
     <div className="login">
       <div className="login-container">
         <aside className="login-panel login-panel-esq">
-          <div className="login-panel-icon-wrap" aria-hidden>
-            <span className="login-panel-icon">🔧</span>
-          </div>
           <h1 className="login-panel-titulo">
             Apadrinha Paraná
             <span className="login-panel-subtitulo">Gestão de Demandas</span>
@@ -167,6 +182,16 @@ export function Login({ onEntrar }: LoginProps) {
                   autoComplete="current-password"
                   disabled={carregando}
                 />
+              </label>
+
+              <label className="login-checkbox">
+                <input
+                  type="checkbox"
+                  checked={lembrarLogin}
+                  onChange={(e) => setLembrarLogin(e.target.checked)}
+                  disabled={carregando}
+                />
+                <span>Lembrar meu email</span>
               </label>
 
               <button
