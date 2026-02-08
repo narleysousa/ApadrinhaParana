@@ -52,6 +52,21 @@ Abra no navegador o endereço indicado (geralmente `http://localhost:5173`).
 - Node.js 20+ (arquivo `.nvmrc` incluído)
 - npm 10+
 
+## Firebase (Firestore)
+
+Crie um arquivo `.env.local` com:
+
+```bash
+VITE_FIREBASE_API_KEY=AIzaSyBzZtrFwdCiWX3VrUBN0vgNYV-0k3ghQO0
+VITE_FIREBASE_AUTH_DOMAIN=apadrinha-parana.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=apadrinha-parana
+VITE_FIREBASE_STORAGE_BUCKET=apadrinha-parana.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=682179178976
+VITE_FIREBASE_APP_ID=1:682179178976:web:48b6186a4a2b2decf5bb85
+```
+
+No Firebase Console, habilite o **Firestore Database** para o projeto `apadrinha-parana`.
+
 ## Build
 
 ```bash

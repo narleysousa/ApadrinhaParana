@@ -276,19 +276,6 @@
   color: var(--cor-texto-sec);
 }
 
-.minhas-tarefas-card-categoria {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .minhas-tarefas-card-cidade {
   font-size: 0.75rem;
   font-weight: 500;
@@ -307,6 +294,31 @@
   font-size: 0.9rem;
   color: var(--cor-texto);
   line-height: 1.4;
+}
+
+.minhas-tarefas-card-abas {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.minhas-tarefas-card-aba {
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-card);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--cor-texto-sec);
+}
+
+.minhas-tarefas-card-aba.ativa {
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria);
+  font-weight: 600;
+}
+
+.minhas-tarefas-card-painel {
+  margin-bottom: 0.75rem;
 }
 
 .minhas-tarefas-card-responsaveis {
@@ -333,6 +345,90 @@
   margin-left: 0.35rem;
   font-size: 0.8rem;
   color: var(--cor-texto-sec);
+}
+
+.minhas-tarefas-card-sem-comentarios {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--cor-texto-sec);
+}
+
+.minhas-tarefas-comentarios-lista {
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.minhas-tarefas-comentario-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  background: var(--cor-card);
+}
+
+.minhas-tarefas-comentario-conteudo {
+  min-width: 0;
+  flex: 1;
+}
+
+.minhas-tarefas-comentario-meta {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  color: var(--cor-texto-sec);
+}
+
+.minhas-tarefas-comentario-texto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--cor-texto);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.minhas-tarefas-comentario-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.minhas-tarefas-comentario-textarea {
+  width: 100%;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 70px;
+}
+
+.minhas-tarefas-comentario-textarea:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+}
+
+.minhas-tarefas-comentario-acoes {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.minhas-tarefas-comentario-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  background: var(--cor-primaria);
+}
+
+.minhas-tarefas-comentario-btn:disabled {
+  opacity: 0.5;
 }
 
 .minhas-tarefas-card-acoes {

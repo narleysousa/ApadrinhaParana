@@ -14,7 +14,7 @@ const DESCRICAO_SISTEMA =
 const BENEFICIOS = [
   'Priorize e acompanhe demandas em um só lugar',
   'Atribua responsáveis e acompanhe o progresso',
-  'Organize por projeto e categoria',
+  'Organize por projeto e cidade',
 ]
 
 export function Login({ usuarios, onEntrar }: LoginProps) {

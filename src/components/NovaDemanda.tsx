@@ -12,12 +12,12 @@ interface NovaDemandaProps {
     titulo: string
     projetoId: string
     responsaveisIds: string[]
-    categoria: string
     prioridade: Prioridade
     descricao: string
     agentId?: string
   }) => void
   onAdicionarProjeto?: (nome: string) => string | void
+  onAdicionarCidade?: (nome: string) => string | void
 }
 
 export function NovaDemanda({
@@ -26,21 +26,28 @@ export function NovaDemanda({
   agents,
   onCriar,
   onAdicionarProjeto,
+  onAdicionarCidade,
 }: NovaDemandaProps) {
   const [titulo, setTitulo] = useState('')
   const [projetoId, setProjetoId] = useState('')
   const [responsaveisIds, setResponsaveisIds] = useState<string[]>([])
-  const [categoria, setCategoria] = useState('')
   const [prioridade, setPrioridade] = useState<Prioridade>('MÉDIA')
   const [descricao, setDescricao] = useState('')
   const [agentId, setAgentId] = useState('')
   const [novoProjetoNome, setNovoProjetoNome] = useState('')
   const [mostrarNovoProjeto, setMostrarNovoProjeto] = useState(false)
+  const [novaCidadeNome, setNovaCidadeNome] = useState('')
+  const [mostrarNovaCidade, setMostrarNovaCidade] = useState(false)
   const inputNovoProjetoRef = useRef<HTMLInputElement>(null)
+  const inputNovaCidadeRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (mostrarNovoProjeto) inputNovoProjetoRef.current?.focus()
   }, [mostrarNovoProjeto])
+
+  useEffect(() => {
+    if (mostrarNovaCidade) inputNovaCidadeRef.current?.focus()
+  }, [mostrarNovaCidade])
 
   const toggleResponsavel = (id: string) => {
     setResponsaveisIds((prev) =>
@@ -55,7 +62,6 @@ export function NovaDemanda({
       titulo: titulo.trim(),
       projetoId,
       responsaveisIds,
-      categoria,
       prioridade,
       descricao: descricao.trim(),
       agentId: agentId || undefined,
@@ -64,7 +70,6 @@ export function NovaDemanda({
     setDescricao('')
     setAgentId('')
     setResponsaveisIds([])
-    setCategoria('')
     setPrioridade('MÉDIA')
   }
 
@@ -74,6 +79,15 @@ export function NovaDemanda({
       if (novoId) setProjetoId(novoId)
       setNovoProjetoNome('')
       setMostrarNovoProjeto(false)
+    }
+  }
+
+  const handleAdicionarCidade = () => {
+    if (novaCidadeNome.trim() && onAdicionarCidade) {
+      const novoId = onAdicionarCidade(novaCidadeNome.trim())
+      if (novoId) setAgentId(novoId)
+      setNovaCidadeNome('')
+      setMostrarNovaCidade(false)
     }
   }
 
@@ -161,30 +175,51 @@ export function NovaDemanda({
         </label>
 
         <label className="nova-demanda-label">
-          Categoria
-          <input
-            type="text"
-            value={categoria}
-            onChange={(e) => setCategoria(e.target.value)}
-            className="nova-demanda-input"
-          />
-        </label>
-
-        <label className="nova-demanda-label">
           Cidade
-          <select
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            className="nova-demanda-select"
-            aria-label="Selecione a cidade"
-          >
-            <option value="">Selecione a cidade (opcional)</option>
-            {agents.filter(a => a.ativo).map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nome}
-              </option>
-            ))}
-          </select>
+          <div className="nova-demanda-projeto-row">
+            <select
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+              className="nova-demanda-select"
+              disabled={mostrarNovaCidade}
+              aria-label="Selecione a cidade"
+            >
+              <option value="">Selecione a cidade (opcional)</option>
+              {agents.filter((a) => a.ativo).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nome}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="nova-demanda-btn-add"
+              onClick={() => setMostrarNovaCidade(!mostrarNovaCidade)}
+              title="Adicionar cidade"
+            >
+              +
+            </button>
+          </div>
+          {mostrarNovaCidade && (
+            <div className="nova-demanda-novo-projeto">
+              <input
+                ref={inputNovaCidadeRef}
+                type="text"
+                value={novaCidadeNome}
+                onChange={(e) => setNovaCidadeNome(e.target.value)}
+                className="nova-demanda-input"
+                aria-label="Nome da nova cidade"
+                onKeyDown={(e) => e.key === 'Escape' && setMostrarNovaCidade(false)}
+              />
+              <button
+                type="button"
+                className="nova-demanda-btn-confirmar"
+                onClick={handleAdicionarCidade}
+              >
+                Adicionar
+              </button>
+            </div>
+          )}
         </label>
 
         <label className="nova-demanda-label">

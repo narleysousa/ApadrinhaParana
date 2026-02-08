@@ -18,16 +18,23 @@ export interface Agent {
   criadoEm: string
 }
 
+export interface ComentarioDemanda {
+  id: string
+  texto: string
+  criadoEm: string
+  autor: Responsavel
+}
+
 export interface Demanda {
   id: string
   titulo: string
   projeto: Projeto
   responsaveis: Responsavel[]
-  categoria: string
   prioridade: Prioridade
   descricao: string
   progresso: number
   criadaEm: string
   finalizada?: boolean
   agentId?: string
+  comentarios?: ComentarioDemanda[]
 }

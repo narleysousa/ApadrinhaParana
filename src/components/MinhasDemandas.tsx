@@ -5,6 +5,7 @@ import './MinhasDemandas.css'
 const DIAS_DEMANDA_ANTIGA = 14
 const DEBOUNCE_BUSCA_MS = 280
 type AbaDemandas = 'andamento' | 'finalizadas'
+type AbaCard = 'detalhes' | 'comentarios'
 
 interface MinhasDemandasProps {
   demandas: Demanda[]
@@ -13,6 +14,7 @@ interface MinhasDemandasProps {
   usuarioAtualId: string
   onExcluir: (id: string) => void
   onToggleFinalizada: (id: string) => void
+  onAdicionarComentario: (demandaId: string, texto: string) => void
 }
 
 export function MinhasDemandas({
@@ -22,13 +24,15 @@ export function MinhasDemandas({
   usuarioAtualId,
   onExcluir,
   onToggleFinalizada,
+  onAdicionarComentario,
 }: MinhasDemandasProps) {
   const [buscaInput, setBuscaInput] = useState('')
   const [busca, setBusca] = useState('')
   const [filtroProjeto, setFiltroProjeto] = useState('todos')
-  const [filtroCategoria, setFiltroCategoria] = useState('todas')
   const [filtroResponsavel, setFiltroResponsavel] = useState('todos')
   const [abaDemandas, setAbaDemandas] = useState<AbaDemandas>('andamento')
+  const [abasCard, setAbasCard] = useState<Record<string, AbaCard>>({})
+  const [comentariosInput, setComentariosInput] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const t = setTimeout(() => setBusca(buscaInput), DEBOUNCE_BUSCA_MS)
@@ -43,11 +47,6 @@ export function MinhasDemandas({
     return Array.from(map.values())
   }, [demandas])
 
-  const categoriasUnicas = useMemo(() => {
-    const categorias = demandas.map((d) => d.categoria).filter(Boolean)
-    return [...new Set(categorias)].sort()
-  }, [demandas])
-
   const demandasBaseFiltradas = useMemo(() => {
     return demandas.filter((d) => {
       const matchBusca =
@@ -56,8 +55,6 @@ export function MinhasDemandas({
         d.descricao.toLowerCase().includes(busca.toLowerCase())
       const matchProjeto =
         filtroProjeto === 'todos' || d.projeto.id === filtroProjeto
-      const matchCategoria =
-        filtroCategoria === 'todas' || d.categoria === filtroCategoria
       const matchResponsavel =
         filtroResponsavel === 'todos' ||
         (filtroResponsavel === 'eu' && d.responsaveis.some((r) => r.id === usuarioAtualId)) ||
@@ -65,7 +62,6 @@ export function MinhasDemandas({
       return (
         matchBusca &&
         matchProjeto &&
-        matchCategoria &&
         matchResponsavel
       )
     })
@@ -73,7 +69,6 @@ export function MinhasDemandas({
     demandas,
     busca,
     filtroProjeto,
-    filtroCategoria,
     filtroResponsavel,
     usuarioAtualId,
   ])
@@ -112,6 +107,30 @@ export function MinhasDemandas({
     () => demandas.filter((d) => d.finalizada).length,
     [demandas]
   )
+
+  const handleMudarAbaCard = (demandaId: string, aba: AbaCard) => {
+    setAbasCard((prev) => ({ ...prev, [demandaId]: aba }))
+  }
+
+  const handleComentarioChange = (demandaId: string, texto: string) => {
+    setComentariosInput((prev) => ({ ...prev, [demandaId]: texto }))
+  }
+
+  const handleComentarioSubmit = (demandaId: string) => {
+    const texto = (comentariosInput[demandaId] ?? '').trim()
+    if (!texto) return
+    onAdicionarComentario(demandaId, texto)
+    setComentariosInput((prev) => ({ ...prev, [demandaId]: '' }))
+    setAbasCard((prev) => ({ ...prev, [demandaId]: 'comentarios' }))
+  }
+
+  const formatarDataHora = (iso: string) => {
+    const data = new Date(iso)
+    return `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })}`
+  }
 
   return (
     <div className="minhas-demandas">
@@ -199,19 +218,6 @@ export function MinhasDemandas({
                 </option>
               ))}
             </select>
-            <select
-              value={filtroCategoria}
-              onChange={(e) => setFiltroCategoria(e.target.value)}
-              className="minhas-tarefas-select"
-              aria-label="Filtrar por categoria"
-            >
-              <option value="todas">Todas Categorias</option>
-              {categoriasUnicas.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
           </div>
           <div className="minhas-tarefas-responsavel">
             <span>Responsável:</span>
@@ -236,6 +242,9 @@ export function MinhasDemandas({
 
         <ul className="minhas-tarefas-lista">
           {demandasFiltradas.map((d) => {
+            const abaCard = abasCard[d.id] ?? 'detalhes'
+            const comentarios = Array.isArray(d.comentarios) ? d.comentarios : []
+            const textoComentario = comentariosInput[d.id] ?? ''
             return (
               <li
                 key={d.id}
@@ -257,11 +266,6 @@ export function MinhasDemandas({
                       ? `${d.projeto.nome.slice(0, 24)}...`
                       : d.projeto.nome}
                   </span>
-                  {d.categoria && (
-                    <span className="minhas-tarefas-card-categoria" title={d.categoria}>
-                      {d.categoria}
-                    </span>
-                  )}
                   {d.agentId && (() => {
                     const cidade = agents.find(a => a.id === d.agentId)
                     return cidade ? (
@@ -271,26 +275,107 @@ export function MinhasDemandas({
                     ) : null
                   })()}
                 </div>
-                {d.descricao && (
-                  <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
-                )}
-                <div className="minhas-tarefas-card-responsaveis">
-                  {d.responsaveis.map((r) => (
-                    <span
-                      key={r.id}
-                      className="minhas-tarefas-card-avatar"
-                      title={r.nome}
-                    >
-                      {r.iniciais}
-                    </span>
-                  ))}
-                  <span className="minhas-tarefas-card-resp-texto">
-                    {d.responsaveis.length} Resp.
-                    {d.responsaveis.some((r) => r.id === usuarioAtualId)
-                      ? ' (Você)'
-                      : ''}
-                  </span>
+
+                <div className="minhas-tarefas-card-abas" role="tablist" aria-label="Abas da atividade">
+                  <button
+                    type="button"
+                    className={`minhas-tarefas-card-aba ${abaCard === 'detalhes' ? 'ativa' : ''}`}
+                    onClick={() => handleMudarAbaCard(d.id, 'detalhes')}
+                    role="tab"
+                    aria-selected={abaCard === 'detalhes'}
+                  >
+                    Detalhes
+                  </button>
+                  <button
+                    type="button"
+                    className={`minhas-tarefas-card-aba ${abaCard === 'comentarios' ? 'ativa' : ''}`}
+                    onClick={() => handleMudarAbaCard(d.id, 'comentarios')}
+                    role="tab"
+                    aria-selected={abaCard === 'comentarios'}
+                  >
+                    Comentários ({comentarios.length})
+                  </button>
                 </div>
+
+                {abaCard === 'detalhes' && (
+                  <div className="minhas-tarefas-card-painel" role="tabpanel">
+                    {d.descricao && (
+                      <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
+                    )}
+                    <div className="minhas-tarefas-card-responsaveis">
+                      {d.responsaveis.map((r) => (
+                        <span
+                          key={r.id}
+                          className="minhas-tarefas-card-avatar"
+                          title={r.nome}
+                        >
+                          {r.iniciais}
+                        </span>
+                      ))}
+                      <span className="minhas-tarefas-card-resp-texto">
+                        {d.responsaveis.length} Resp.
+                        {d.responsaveis.some((r) => r.id === usuarioAtualId)
+                          ? ' (Você)'
+                          : ''}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {abaCard === 'comentarios' && (
+                  <div className="minhas-tarefas-card-painel" role="tabpanel">
+                    {comentarios.length === 0 ? (
+                      <p className="minhas-tarefas-card-sem-comentarios">
+                        Nenhum comentário ainda. Adicione uma observação abaixo.
+                      </p>
+                    ) : (
+                      <ul className="minhas-tarefas-comentarios-lista">
+                        {comentarios.map((comentario) => (
+                          <li key={comentario.id} className="minhas-tarefas-comentario-item">
+                            <span
+                              className="minhas-tarefas-card-avatar"
+                              title={comentario.autor.nome}
+                            >
+                              {comentario.autor.iniciais}
+                            </span>
+                            <div className="minhas-tarefas-comentario-conteudo">
+                              <p className="minhas-tarefas-comentario-meta">
+                                <strong>{comentario.autor.nome}</strong> • {formatarDataHora(comentario.criadoEm)}
+                              </p>
+                              <p className="minhas-tarefas-comentario-texto">{comentario.texto}</p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <form
+                      className="minhas-tarefas-comentario-form"
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        handleComentarioSubmit(d.id)
+                      }}
+                    >
+                      <textarea
+                        value={textoComentario}
+                        onChange={(e) => handleComentarioChange(d.id, e.target.value)}
+                        className="minhas-tarefas-comentario-textarea"
+                        rows={3}
+                        placeholder="Escreva um comentário ou observação sobre esta demanda..."
+                      />
+                      <div className="minhas-tarefas-comentario-acoes">
+                        <button
+                          type="submit"
+                          className="minhas-tarefas-comentario-btn"
+                          disabled={!textoComentario.trim()}
+                        >
+                          Comentar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
                 <div className="minhas-tarefas-card-acoes">
                   <button
                     type="button"

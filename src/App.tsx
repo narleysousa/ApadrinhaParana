@@ -23,6 +23,7 @@ import {
   salvarUsuarioLogado,
   limparUsuarioLogado,
 } from './lib/utils'
+import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/cloud'
 import './App.css'
 
 type Aba = 'demandas' | 'agentes'
@@ -39,6 +40,14 @@ const NOMES_PROJETOS_REMOVIDOS = new Set([
 
 function projetoEhRemovido(nome: string): boolean {
   return NOMES_PROJETOS_REMOVIDOS.has(nome.trim().toLowerCase())
+}
+
+function normalizarProjetos(lista: Projeto[]): Projeto[] {
+  return lista.filter((p) => p && !projetoEhRemovido(p.nome))
+}
+
+function normalizarDemandas(lista: Demanda[]): Demanda[] {
+  return lista.filter((d) => d?.projeto && !projetoEhRemovido(d.projeto.nome))
 }
 
 function normalizarPath(pathname: string): string {
@@ -80,22 +89,16 @@ function App() {
   const [projetos, setProjetos] = useState<Projeto[]>(() => {
     const saved = carregarProjetos()
     if (Array.isArray(saved)) {
-      return (saved as Projeto[]).filter(
-        (p) => p && !projetoEhRemovido(p.nome)
-      )
+      return normalizarProjetos(saved as Projeto[])
     }
-    return PROJETOS_INICIAIS.filter((p) => p && !projetoEhRemovido(p.nome))
+    return normalizarProjetos(PROJETOS_INICIAIS)
   })
   const [demandas, setDemandas] = useState<Demanda[]>(() => {
     const saved = carregarDemandas()
     if (Array.isArray(saved)) {
-      return (saved as Demanda[]).filter(
-        (d) => d?.projeto && !projetoEhRemovido(d.projeto.nome)
-      )
+      return normalizarDemandas(saved as Demanda[])
     }
-    return getDemandasIniciais().filter(
-      (d) => d?.projeto && !projetoEhRemovido(d.projeto.nome)
-    )
+    return normalizarDemandas(getDemandasIniciais())
   })
   const [agents, setAgents] = useState<Agent[]>(() => {
     const saved = carregarAgents()
@@ -103,6 +106,7 @@ function App() {
     return []
   })
   const [mensagemSucesso, setMensagemSucesso] = useState('')
+  const [nuvemInicializada, setNuvemInicializada] = useState(!nuvemHabilitada)
 
   useEffect(() => {
     salvarProjetos(projetos)
@@ -115,6 +119,40 @@ function App() {
   useEffect(() => {
     salvarAgents(agents)
   }, [agents])
+
+  useEffect(() => {
+    if (!nuvemHabilitada) return
+
+    let ativo = true
+    ;(async () => {
+      const dadosNuvem = await carregarDadosNuvem()
+      if (!ativo) return
+
+      if (dadosNuvem) {
+        setProjetos(normalizarProjetos(dadosNuvem.projetos))
+        setDemandas(normalizarDemandas(dadosNuvem.demandas))
+        setAgents(dadosNuvem.agents)
+      }
+
+      setNuvemInicializada(true)
+    })()
+
+    return () => {
+      ativo = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!nuvemHabilitada || !nuvemInicializada) return
+
+    const t = window.setTimeout(() => {
+      salvarDadosNuvem({ projetos, demandas, agents }).catch((error) => {
+        console.error('Falha ao salvar dados no Firebase:', error)
+      })
+    }, 650)
+
+    return () => window.clearTimeout(t)
+  }, [projetos, demandas, agents, nuvemInicializada])
 
   useEffect(() => {
     const onPopState = () => {
@@ -144,7 +182,6 @@ function App() {
       titulo: string
       projetoId: string
       responsaveisIds: string[]
-      categoria: string
       prioridade: Prioridade
       descricao: string
       agentId?: string
@@ -162,13 +199,13 @@ function App() {
           responsaveisDemanda.length > 0
             ? responsaveisDemanda
             : [RESPONSAVEIS_INICIAIS[0]],
-        categoria: dados.categoria,
         prioridade: dados.prioridade,
         descricao: dados.descricao,
         progresso: 0,
         criadaEm: new Date().toISOString(),
         finalizada: false,
         agentId: dados.agentId,
+        comentarios: [],
       }
       setDemandas((prev) => [nova, ...prev])
       setMensagemSucesso('Demanda criada com sucesso.')
@@ -192,6 +229,38 @@ function App() {
     [projetos]
   )
 
+  const handleAdicionarCidade = useCallback(
+    (nome: string) => {
+      const nomeLimpo = nome.trim()
+      if (!nomeLimpo) return
+
+      const existente = agents.find(
+        (a) => a.nome.trim().toLowerCase() === nomeLimpo.toLowerCase()
+      )
+      if (existente) {
+        if (!existente.ativo) {
+          setAgents((prev) =>
+            prev.map((a) => (a.id === existente.id ? { ...a, ativo: true } : a))
+          )
+        }
+        return existente.id
+      }
+
+      const id = gerarId()
+      setAgents((prev) => [
+        ...prev,
+        {
+          id,
+          nome: nomeLimpo,
+          ativo: true,
+          criadoEm: new Date().toISOString(),
+        },
+      ])
+      return id
+    },
+    [agents]
+  )
+
   const handleExcluir = useCallback((id: string) => {
     if (window.confirm('Excluir esta demanda?')) {
       setDemandas((prev) => prev.filter((d) => d.id !== id))
@@ -205,6 +274,31 @@ function App() {
       )
     )
   }, [])
+
+  const handleAdicionarComentario = useCallback(
+    (demandaId: string, texto: string) => {
+      if (!usuarioLogado || !texto.trim()) return
+
+      setDemandas((prev) =>
+        prev.map((d) => {
+          if (d.id !== demandaId) return d
+          return {
+            ...d,
+            comentarios: [
+              ...(d.comentarios ?? []),
+              {
+                id: gerarId(),
+                texto: texto.trim(),
+                criadoEm: new Date().toISOString(),
+                autor: usuarioLogado,
+              },
+            ],
+          }
+        })
+      )
+    },
+    [usuarioLogado]
+  )
 
   const handleAgentsAdicionar = useCallback((dados: { nome: string }) => {
     setAgents((prev) => [
@@ -299,6 +393,7 @@ function App() {
               agents={agents}
               onCriar={handleCriar}
               onAdicionarProjeto={handleAdicionarProjeto}
+              onAdicionarCidade={handleAdicionarCidade}
             />
           </aside>
           <div className="app-conteudo">
@@ -309,6 +404,7 @@ function App() {
               usuarioAtualId={usuarioLogado.id}
               onExcluir={handleExcluir}
               onToggleFinalizada={handleToggleFinalizada}
+              onAdicionarComentario={handleAdicionarComentario}
             />
           </div>
         </main>
