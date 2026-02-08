@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import type { Demanda, Responsavel, Agent } from '../types'
+import { exportarDemandasExcel } from '../lib/exportExcel'
 import './MinhasDemandas.css'
 
 const DIAS_DEMANDA_ANTIGA = 14
@@ -190,6 +191,22 @@ export function MinhasDemandas({
             aria-pressed={abaDemandas === 'finalizadas'}
           >
             Finalizadas ({contagemFinalizadas})
+          </button>
+          <button
+            type="button"
+            className="minhas-tarefas-btn-exportar"
+            onClick={() => {
+              const demandasParaExportar = demandas.filter(d =>
+                abaDemandas === 'andamento' ? !d.finalizada : d.finalizada
+              )
+              const nomeArquivo = abaDemandas === 'andamento'
+                ? 'demandas_em_andamento'
+                : 'demandas_finalizadas'
+              exportarDemandasExcel(demandasParaExportar, agents, nomeArquivo)
+            }}
+            title={`Exportar ${abaDemandas === 'andamento' ? 'em andamento' : 'finalizadas'} para Excel`}
+          >
+            📥 Exportar Excel
           </button>
         </div>
 

@@ -1,17 +1,12 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { Header } from './components/Header'
 import { Login } from './components/Login/Login'
 import { LoadingScreen } from './components/LoadingScreen'
 import { NovaDemanda } from './components/NovaDemanda'
 import { MinhasDemandas } from './components/MinhasDemandas'
 import { Agents } from './components/Agents/Agents'
-import type { Demanda, Projeto, Prioridade, Agent, Responsavel } from './types'
-import {
-  RESPONSAVEIS_INICIAIS,
-  PROJETOS_INICIAIS,
-  getDemandasIniciais,
-  USUARIOS_LOGIN,
-} from './constants'
+import type { Demanda, Projeto, Prioridade, Agent, Responsavel, Usuario } from './types'
+import { PROJETOS_INICIAIS, getDemandasIniciais } from './constants'
 import {
   gerarId,
   carregarProjetos,
@@ -23,6 +18,7 @@ import {
   carregarUsuarioLogado,
   salvarUsuarioLogado,
   limparUsuarioLogado,
+  carregarUsuarios,
 } from './lib/utils'
 import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/cloud'
 import './components/LoadingScreen.css'
@@ -81,12 +77,8 @@ function getPathPorAba(aba: Aba): string {
 }
 
 function App() {
-  const [usuarioLogado, setUsuarioLogado] = useState<Responsavel | null>(() => {
-    const saved = carregarUsuarioLogado()
-    if (!saved) return null
-    const atual = USUARIOS_LOGIN.find((u) => u.id === saved.id)
-    if (atual) return { id: atual.id, nome: atual.nome, iniciais: atual.iniciais }
-    return saved
+  const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(() => {
+    return carregarUsuarioLogado()
   })
 
   const [carregandoInicial, setCarregandoInicial] = useState(nuvemHabilitada)
@@ -94,15 +86,6 @@ function App() {
   const [statusSync, setStatusSync] = useState<StatusSync>(
     navigator.onLine ? 'sincronizado' : 'offline'
   )
-
-  useEffect(() => {
-    const saved = carregarUsuarioLogado()
-    if (!saved) return
-    const atual = USUARIOS_LOGIN.find((u) => u.id === saved.id)
-    if (atual && (saved.nome !== atual.nome || saved.iniciais !== atual.iniciais)) {
-      salvarUsuarioLogado({ id: atual.id, nome: atual.nome, iniciais: atual.iniciais })
-    }
-  }, [])
 
   const [aba, setAba] = useState<Aba>(() => {
     if (typeof window === 'undefined') return 'demandas'
@@ -133,6 +116,16 @@ function App() {
 
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [nuvemInicializada, setNuvemInicializada] = useState(!nuvemHabilitada)
+
+  // Lista de responsáveis = todos os usuários cadastrados
+  const responsaveis: Responsavel[] = useMemo(() => {
+    const usuarios = carregarUsuarios()
+    return usuarios.map((u) => ({
+      id: u.id,
+      nome: u.nome,
+      iniciais: u.iniciais,
+    }))
+  }, [usuarioLogado]) // Recalcular quando usuário logado mudar (pode ter cadastrado novo)
 
   // Detectar online/offline
   useEffect(() => {
@@ -211,7 +204,6 @@ function App() {
           if (resultado.offline) {
             setStatusSync('offline')
           } else if (resultado.semPermissao) {
-            // Sem permissão no Firebase - funciona apenas localmente, não mostrar erro
             setStatusSync('sincronizado')
           } else if (resultado.sucesso) {
             setStatusSync('sincronizado')
@@ -221,7 +213,6 @@ function App() {
         })
         .catch((error) => {
           console.error('Falha ao salvar dados no Firebase:', error)
-          // Em caso de erro, não bloquear a experiência do usuário
           setStatusSync('sincronizado')
         })
     }, 650)
@@ -275,10 +266,13 @@ function App() {
       agentId?: string
     }) => {
       const projeto = projetos.find((p) => p.id === dados.projetoId)
-      if (!projeto) return
-      const responsaveisDemanda = RESPONSAVEIS_INICIAIS.filter((r) =>
-        dados.responsaveisIds.includes(r.id)
-      )
+      if (!projeto || !usuarioLogado) return
+
+      const usuarios = carregarUsuarios()
+      const responsaveisDemanda = usuarios
+        .filter((u) => dados.responsaveisIds.includes(u.id))
+        .map((u) => ({ id: u.id, nome: u.nome, iniciais: u.iniciais }))
+
       const nova: Demanda = {
         id: gerarId(),
         titulo: dados.titulo,
@@ -286,7 +280,7 @@ function App() {
         responsaveis:
           responsaveisDemanda.length > 0
             ? responsaveisDemanda
-            : [RESPONSAVEIS_INICIAIS[0]],
+            : [{ id: usuarioLogado.id, nome: usuarioLogado.nome, iniciais: usuarioLogado.iniciais }],
         prioridade: dados.prioridade,
         descricao: dados.descricao,
         progresso: 0,
@@ -299,7 +293,7 @@ function App() {
       setMensagemSucesso('Demanda criada com sucesso.')
       setTimeout(() => setMensagemSucesso(''), 3000)
     },
-    [projetos]
+    [projetos, usuarioLogado]
   )
 
   const handleAdicionarProjeto = useCallback(
@@ -378,7 +372,11 @@ function App() {
                 id: gerarId(),
                 texto: texto.trim(),
                 criadoEm: new Date().toISOString(),
-                autor: usuarioLogado,
+                autor: {
+                  id: usuarioLogado.id,
+                  nome: usuarioLogado.nome,
+                  iniciais: usuarioLogado.iniciais,
+                },
               },
             ],
           }
@@ -419,7 +417,7 @@ function App() {
     setAgents((prev) => prev.filter((a) => a.id !== id))
   }, [])
 
-  const handleEntrar = useCallback((usuario: Responsavel) => {
+  const handleEntrar = useCallback((usuario: Usuario) => {
     salvarUsuarioLogado(usuario)
     setUsuarioLogado(usuario)
   }, [])
@@ -435,12 +433,7 @@ function App() {
   }
 
   if (!usuarioLogado) {
-    return (
-      <Login
-        usuarios={USUARIOS_LOGIN}
-        onEntrar={handleEntrar}
-      />
-    )
+    return <Login onEntrar={handleEntrar} />
   }
 
   const getStatusSyncLabel = () => {
@@ -507,7 +500,7 @@ function App() {
           <aside className="app-aside">
             <NovaDemanda
               projetos={projetos}
-              responsaveis={RESPONSAVEIS_INICIAIS}
+              responsaveis={responsaveis}
               agents={agents}
               onCriar={handleCriar}
               onAdicionarProjeto={handleAdicionarProjeto}
@@ -517,7 +510,7 @@ function App() {
           <div className="app-conteudo">
             <MinhasDemandas
               demandas={demandas}
-              responsaveis={RESPONSAVEIS_INICIAIS}
+              responsaveis={responsaveis}
               agents={agents}
               usuarioAtualId={usuarioLogado.id}
               onExcluir={handleExcluir}

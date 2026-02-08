@@ -1,4 +1,15 @@
 export type Prioridade = 'ALTA' | 'MÉDIA' | 'BAIXA'
+export type Cargo = 'Gestor' | 'Colaborador' | 'Analista' | 'Coordenador'
+
+export interface Usuario {
+  id: string
+  nome: string
+  email: string
+  senha: string // 4 dígitos
+  cargo: Cargo
+  iniciais: string
+  criadoEm: string
+}
 
 export interface Responsavel {
   id: string
