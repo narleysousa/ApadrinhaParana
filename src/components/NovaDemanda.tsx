@@ -67,6 +67,7 @@ export function NovaDemanda({
       agentId: agentId || undefined,
     })
     setTitulo('')
+    setProjetoId('')
     setDescricao('')
     setAgentId('')
     setResponsaveisIds([])

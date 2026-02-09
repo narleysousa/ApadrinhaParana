@@ -366,7 +366,11 @@ export function MinhasDemandas({
                             <button
                               type="button"
                               className="minhas-tarefas-comentario-excluir"
-                              onClick={() => onExcluirComentario(d.id, comentario.id)}
+                              onClick={() => {
+                                if (window.confirm('Excluir este comentário?')) {
+                                  onExcluirComentario(d.id, comentario.id)
+                                }
+                              }}
                               title="Excluir comentário"
                               aria-label="Excluir comentário"
                             >
