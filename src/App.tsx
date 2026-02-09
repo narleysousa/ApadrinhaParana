@@ -445,10 +445,18 @@ function App() {
     setAgents((prev) => prev.filter((a) => a.id !== id))
   }, [])
 
-  const handleEntrar = useCallback((usuario: Usuario) => {
-    salvarUsuarioLogado(usuario)
-    setUsuarioLogado(usuario)
-  }, [])
+  const handleEntrar = useCallback(
+    (usuario: Usuario) => {
+      salvarUsuarioLogado(usuario)
+      setUsuarioLogado(usuario)
+      // Forçar sync após login/cadastro
+      if (nuvemHabilitada && navigator.onLine) {
+        const usuarios = carregarUsuarios()
+        salvarDadosNuvem({ projetos, demandas, agents, usuarios }).catch(console.error)
+      }
+    },
+    [projetos, demandas, agents]
+  )
 
   const handleSair = useCallback(() => {
     limparUsuarioLogado()
