@@ -15,6 +15,7 @@ interface NovaDemandaProps {
     prioridade: Prioridade
     descricao: string
     agentId?: string
+    numeroCriancasAcolhidas?: number
   }) => void
   onAdicionarProjeto?: (nome: string) => string | void
   onAdicionarCidade?: (nome: string) => string | void
@@ -34,6 +35,7 @@ export function NovaDemanda({
   const [prioridade, setPrioridade] = useState<Prioridade>('MÉDIA')
   const [descricao, setDescricao] = useState('')
   const [agentId, setAgentId] = useState('')
+  const [numeroCriancas, setNumeroCriancas] = useState('')
   const [novoProjetoNome, setNovoProjetoNome] = useState('')
   const [mostrarNovoProjeto, setMostrarNovoProjeto] = useState(false)
   const [novaCidadeNome, setNovaCidadeNome] = useState('')
@@ -65,11 +67,13 @@ export function NovaDemanda({
       prioridade,
       descricao: descricao.trim(),
       agentId: agentId || undefined,
+      numeroCriancasAcolhidas: numeroCriancas ? parseInt(numeroCriancas, 10) : undefined,
     })
     setTitulo('')
     setProjetoId('')
     setDescricao('')
     setAgentId('')
+    setNumeroCriancas('')
     setResponsaveisIds([])
     setPrioridade('MÉDIA')
   }
@@ -221,6 +225,19 @@ export function NovaDemanda({
               </button>
             </div>
           )}
+        </label>
+
+        <label className="nova-demanda-label">
+          Número de Crianças Acolhidas
+          <input
+            type="number"
+            min="0"
+            value={numeroCriancas}
+            onChange={(e) => setNumeroCriancas(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Ex: 5 (opcional)"
+            aria-label="Número de crianças acolhidas"
+          />
         </label>
 
         <label className="nova-demanda-label">

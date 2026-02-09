@@ -47,5 +47,6 @@ export interface Demanda {
   criadaEm: string
   finalizada?: boolean
   agentId?: string
+  numeroCriancasAcolhidas?: number
   comentarios?: ComentarioDemanda[]
 }

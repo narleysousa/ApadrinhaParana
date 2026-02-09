@@ -264,6 +264,7 @@ function App() {
       prioridade: Prioridade
       descricao: string
       agentId?: string
+      numeroCriancasAcolhidas?: number
     }) => {
       const projeto = projetos.find((p) => p.id === dados.projetoId)
       if (!projeto || !usuarioLogado) return
@@ -287,6 +288,7 @@ function App() {
         criadaEm: new Date().toISOString(),
         finalizada: false,
         agentId: dados.agentId,
+        numeroCriancasAcolhidas: dados.numeroCriancasAcolhidas,
         comentarios: [],
       }
       setDemandas((prev) => [nova, ...prev])
