@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { Usuario, Cargo } from '../../types'
 import { CARGOS_DISPONIVEIS } from '../../constants'
-import { cadastrarUsuario, autenticarUsuario } from '../../lib/utils'
 import './Login.css'
+
+interface ResultadoAcesso {
+  sucesso: boolean
+  erro?: string
+  usuario?: Usuario
+}
 
 interface LoginProps {
   onEntrar: (usuario: Usuario) => void
+  onAutenticar: (email: string, senha: string) => Promise<ResultadoAcesso>
+  onCadastrar: (dados: {
+    nome: string
+    email: string
+    senha: string
+    cargo: Cargo
+  }) => Promise<ResultadoAcesso>
 }
 
 const DESCRICAO_SISTEMA =
@@ -17,28 +29,14 @@ const BENEFICIOS = [
   'Organize por projeto e cidade',
 ]
 
-const CHAVE_EMAIL_LEMBRADO = 'apadrinha-parana-email-lembrado'
-
-export function Login({ onEntrar }: LoginProps) {
+export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
   const [aba, setAba] = useState<'entrar' | 'criar'>('entrar')
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
 
-  // Login
   const [emailLogin, setEmailLogin] = useState('')
   const [senhaLogin, setSenhaLogin] = useState('')
-  const [lembrarLogin, setLembrarLogin] = useState(false)
 
-  // Carregar email lembrado ao iniciar
-  useEffect(() => {
-    const emailSalvo = localStorage.getItem(CHAVE_EMAIL_LEMBRADO)
-    if (emailSalvo) {
-      setEmailLogin(emailSalvo)
-      setLembrarLogin(true)
-    }
-  }, [])
-
-  // Cadastro
   const [nome, setNome] = useState('')
   const [emailCadastro, setEmailCadastro] = useState('')
   const [cargo, setCargo] = useState<Cargo>('Psicóloga')
@@ -47,30 +45,28 @@ export function Login({ onEntrar }: LoginProps) {
 
   const limparErro = () => setErro('')
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     limparErro()
     setCarregando(true)
 
-    setTimeout(() => {
-      const resultado = autenticarUsuario(emailLogin, senhaLogin)
+    try {
+      const resultado = await onAutenticar(emailLogin, senhaLogin)
 
       if (resultado.sucesso && resultado.usuario) {
-        // Salvar ou remover email lembrado
-        if (lembrarLogin) {
-          localStorage.setItem(CHAVE_EMAIL_LEMBRADO, emailLogin)
-        } else {
-          localStorage.removeItem(CHAVE_EMAIL_LEMBRADO)
-        }
         onEntrar(resultado.usuario)
       } else {
         setErro(resultado.erro || 'Erro ao fazer login')
-        setCarregando(false)
       }
-    }, 300)
+    } catch (error) {
+      const mensagem = error instanceof Error ? error.message : String(error)
+      setErro(mensagem || 'Erro ao fazer login')
+    } finally {
+      setCarregando(false)
+    }
   }
 
-  const handleCadastro = (e: React.FormEvent) => {
+  const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault()
     limparErro()
 
@@ -81,8 +77,8 @@ export function Login({ onEntrar }: LoginProps) {
 
     setCarregando(true)
 
-    setTimeout(() => {
-      const resultado = cadastrarUsuario({
+    try {
+      const resultado = await onCadastrar({
         nome,
         email: emailCadastro,
         senha: senhaCadastro,
@@ -93,41 +89,22 @@ export function Login({ onEntrar }: LoginProps) {
         onEntrar(resultado.usuario)
       } else {
         setErro(resultado.erro || 'Erro ao cadastrar')
-        setCarregando(false)
       }
-    }, 300)
+    } catch (error) {
+      const mensagem = error instanceof Error ? error.message : String(error)
+      setErro(mensagem || 'Erro ao cadastrar')
+    } finally {
+      setCarregando(false)
+    }
   }
 
   const handleSenhaChange = (valor: string, setter: (v: string) => void) => {
-    // Permitir apenas dígitos e máximo 4 caracteres
     const apenasDigitos = valor.replace(/\D/g, '').slice(0, 4)
     setter(apenasDigitos)
   }
 
-  const handleLoginTeste = () => {
-    const usuarioTeste: Usuario = {
-      id: 'teste-dev',
-      nome: 'Usuário Teste',
-      email: 'teste@teste.com',
-      iniciais: 'UT',
-      cargo: 'Psicóloga',
-      senha: '0000',
-      criadoEm: new Date().toISOString(),
-    }
-    onEntrar(usuarioTeste)
-  }
-
   return (
     <div className="login">
-      <button
-        type="button"
-        className="login-btn-teste"
-        onClick={handleLoginTeste}
-        title="Entrar em modo de teste"
-        aria-label="Entrar em modo de teste"
-      >
-        ⚙️
-      </button>
       <div className="login-container">
         <aside className="login-panel login-panel-esq">
           <h1 className="login-panel-titulo">
@@ -147,7 +124,10 @@ export function Login({ onEntrar }: LoginProps) {
             <button
               type="button"
               className={`login-tab ${aba === 'entrar' ? 'ativo' : ''}`}
-              onClick={() => { setAba('entrar'); limparErro() }}
+              onClick={() => {
+                setAba('entrar')
+                limparErro()
+              }}
               aria-pressed={aba === 'entrar'}
             >
               Entrar
@@ -155,7 +135,10 @@ export function Login({ onEntrar }: LoginProps) {
             <button
               type="button"
               className={`login-tab ${aba === 'criar' ? 'ativo' : ''}`}
-              onClick={() => { setAba('criar'); limparErro() }}
+              onClick={() => {
+                setAba('criar')
+                limparErro()
+              }}
               aria-pressed={aba === 'criar'}
             >
               Criar Conta
@@ -171,9 +154,7 @@ export function Login({ onEntrar }: LoginProps) {
           {aba === 'entrar' && (
             <form className="login-form" onSubmit={handleLogin}>
               <h2 className="login-bemvindo">Bem-vindo de volta</h2>
-              <p className="login-instruction">
-                Entre com seu email e senha de 4 dígitos:
-              </p>
+              <p className="login-instruction">Entre com seu email e senha de 4 dígitos:</p>
 
               <label className="login-label">
                 <span>Email</span>
@@ -206,26 +187,12 @@ export function Login({ onEntrar }: LoginProps) {
                 />
               </label>
 
-              <label className="login-checkbox">
-                <input
-                  type="checkbox"
-                  checked={lembrarLogin}
-                  onChange={(e) => setLembrarLogin(e.target.checked)}
-                  disabled={carregando}
-                />
-                <span>Lembrar meu email</span>
-              </label>
-
               <button
                 type="submit"
                 className="login-btn-submit"
                 disabled={carregando || !emailLogin || senhaLogin.length !== 4}
               >
-                {carregando ? (
-                  <span className="login-btn-loader" />
-                ) : (
-                  'Entrar'
-                )}
+                {carregando ? <span className="login-btn-loader" /> : 'Entrar'}
               </button>
             </form>
           )}
@@ -233,9 +200,7 @@ export function Login({ onEntrar }: LoginProps) {
           {aba === 'criar' && (
             <form className="login-form" onSubmit={handleCadastro}>
               <h2 className="login-bemvindo">Criar Conta</h2>
-              <p className="login-instruction">
-                Preencha seus dados para se cadastrar:
-              </p>
+              <p className="login-instruction">Preencha seus dados para se cadastrar:</p>
 
               <label className="login-label">
                 <span>Nome completo</span>
@@ -275,7 +240,9 @@ export function Login({ onEntrar }: LoginProps) {
                   disabled={carregando}
                 >
                   {CARGOS_DISPONIVEIS.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -327,11 +294,7 @@ export function Login({ onEntrar }: LoginProps) {
                   confirmarSenha.length !== 4
                 }
               >
-                {carregando ? (
-                  <span className="login-btn-loader" />
-                ) : (
-                  'Criar Conta'
-                )}
+                {carregando ? <span className="login-btn-loader" /> : 'Criar Conta'}
               </button>
             </form>
           )}

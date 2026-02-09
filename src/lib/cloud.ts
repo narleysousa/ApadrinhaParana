@@ -23,13 +23,22 @@ function asArray<T>(valor: unknown): T[] {
   return Array.isArray(valor) ? (valor as T[]) : []
 }
 
-export async function carregarDadosNuvem(): Promise<SnapshotNuvem | null> {
-  if (!db || !firebaseConfigurado) return null
+export async function carregarDadosNuvem(): Promise<SnapshotNuvem> {
+  if (!db || !firebaseConfigurado) {
+    throw new Error('Firebase não está configurado.')
+  }
 
   try {
     const ref = doc(db, COLECAO_APP, DOC_DADOS)
     const snap = await getDoc(ref)
-    if (!snap.exists()) return null
+    if (!snap.exists()) {
+      return {
+        projetos: [],
+        demandas: [],
+        agents: [],
+        usuarios: [],
+      }
+    }
 
     const data = snap.data() as DadosNuvem
     return {
@@ -38,10 +47,9 @@ export async function carregarDadosNuvem(): Promise<SnapshotNuvem | null> {
       agents: asArray<Agent>(data.agents),
       usuarios: asArray<Usuario>(data.usuarios),
     }
-  } catch (error) {
-    // Silenciar erros de permissão - dados locais continuam funcionando
-    console.warn('Firebase: não foi possível carregar dados da nuvem:', error)
-    return null
+  } catch (error: unknown) {
+    const mensagem = error instanceof Error ? error.message : String(error)
+    throw new Error(`Não foi possível carregar dados da nuvem: ${mensagem}`)
   }
 }
 
@@ -53,11 +61,11 @@ export interface ResultadoSync {
 
 export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoSync> {
   if (!db || !firebaseConfigurado) {
-    return { sucesso: true } // Sem Firebase configurado = tudo ok localmente
+    return { sucesso: false }
   }
 
   if (!navigator.onLine) {
-    return { sucesso: true, offline: true }
+    return { sucesso: false, offline: true }
   }
 
   try {
@@ -83,8 +91,8 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
       errorMessage.includes('Missing or insufficient permissions')
 
     if (isPermissionError) {
-      console.warn('Firebase: sem permissão para salvar. Dados salvos apenas localmente.')
-      return { sucesso: true, semPermissao: true }
+      console.warn('Firebase: sem permissão para salvar.')
+      return { sucesso: false, semPermissao: true }
     }
 
     console.error('Firebase: falha ao salvar:', error)
@@ -93,4 +101,3 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
 }
 
 export const nuvemHabilitada = firebaseConfigurado
-

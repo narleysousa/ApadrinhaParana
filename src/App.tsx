@@ -6,27 +6,24 @@ import { NovaDemanda } from './components/NovaDemanda'
 import { MinhasDemandas } from './components/MinhasDemandas'
 import { Agents } from './components/Agents/Agents'
 import type { Demanda, Projeto, Prioridade, Agent, Responsavel, Usuario } from './types'
-import { PROJETOS_INICIAIS, getDemandasIniciais } from './constants'
+import { gerarId, gerarIniciais } from './lib/utils'
 import {
-  gerarId,
-  carregarProjetos,
-  salvarProjetos,
-  carregarDemandas,
-  salvarDemandas,
-  carregarAgents,
-  salvarAgents,
-  carregarUsuarioLogado,
-  salvarUsuarioLogado,
-  limparUsuarioLogado,
-  carregarUsuarios,
-  salvarUsuarios,
-} from './lib/utils'
-import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/cloud'
+  carregarDadosNuvem,
+  nuvemHabilitada,
+  salvarDadosNuvem,
+  type ResultadoSync,
+} from './lib/cloud'
 import './components/LoadingScreen.css'
 import './App.css'
 
 type Aba = 'demandas' | 'agentes'
 type StatusSync = 'sincronizado' | 'sincronizando' | 'offline' | 'erro'
+
+interface ResultadoAcesso {
+  sucesso: boolean
+  erro?: string
+  usuario?: Usuario
+}
 
 const ROTA_DEMANDAS = '#/'
 const ROTA_AGENTS = '#/agents'
@@ -77,12 +74,17 @@ function getPathPorAba(aba: Aba): string {
   return aba === 'agentes' ? ROTA_AGENTS : ROTA_DEMANDAS
 }
 
-function App() {
-  const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(() => {
-    return carregarUsuarioLogado()
-  })
+function mensagemErroSync(resultado: ResultadoSync): string {
+  if (resultado.offline) return 'Sem internet para salvar na nuvem.'
+  if (resultado.semPermissao) return 'Sem permissão para gravar no Firebase.'
+  return 'Falha ao salvar na nuvem.'
+}
 
-  const [carregandoInicial, setCarregandoInicial] = useState(nuvemHabilitada)
+function App() {
+  const [usuarioLogado, setUsuarioLogado] = useState<Usuario | null>(null)
+
+  const [carregandoInicial, setCarregandoInicial] = useState(true)
+  const [erroInicial, setErroInicial] = useState('')
   const [online, setOnline] = useState(navigator.onLine)
   const [statusSync, setStatusSync] = useState<StatusSync>(
     navigator.onLine ? 'sincronizado' : 'offline'
@@ -93,42 +95,22 @@ function App() {
     return getAbaPorRota(window.location.hash, window.location.pathname)
   })
 
-  const [projetos, setProjetos] = useState<Projeto[]>(() => {
-    const saved = carregarProjetos()
-    if (Array.isArray(saved)) {
-      return normalizarProjetos(saved as Projeto[])
-    }
-    return normalizarProjetos(PROJETOS_INICIAIS)
-  })
-
-  const [demandas, setDemandas] = useState<Demanda[]>(() => {
-    const saved = carregarDemandas()
-    if (Array.isArray(saved)) {
-      return normalizarDemandas(saved as Demanda[])
-    }
-    return normalizarDemandas(getDemandasIniciais())
-  })
-
-  const [agents, setAgents] = useState<Agent[]>(() => {
-    const saved = carregarAgents()
-    if (Array.isArray(saved)) return saved as Agent[]
-    return []
-  })
+  const [projetos, setProjetos] = useState<Projeto[]>([])
+  const [demandas, setDemandas] = useState<Demanda[]>([])
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
 
   const [mensagemSucesso, setMensagemSucesso] = useState('')
-  const [nuvemInicializada, setNuvemInicializada] = useState(!nuvemHabilitada)
+  const [nuvemInicializada, setNuvemInicializada] = useState(false)
 
-  // Lista de responsáveis = todos os usuários cadastrados
   const responsaveis: Responsavel[] = useMemo(() => {
-    const usuarios = carregarUsuarios()
     return usuarios.map((u) => ({
       id: u.id,
       nome: u.nome,
       iniciais: u.iniciais,
     }))
-  }, [usuarioLogado]) // Recalcular quando usuário logado mudar (pode ter cadastrado novo)
+  }, [usuarios])
 
-  // Detectar online/offline
   useEffect(() => {
     const handleOnline = () => {
       setOnline(true)
@@ -149,49 +131,35 @@ function App() {
   }, [])
 
   useEffect(() => {
-    salvarProjetos(projetos)
-  }, [projetos])
-
-  useEffect(() => {
-    salvarDemandas(demandas)
-  }, [demandas])
-
-  useEffect(() => {
-    salvarAgents(agents)
-  }, [agents])
-
-  useEffect(() => {
-    if (!nuvemHabilitada) return
-
     let ativo = true
-      ; (async () => {
-        try {
-          const dadosNuvem = await carregarDadosNuvem()
-          if (!ativo) return
 
-          if (dadosNuvem) {
-            setProjetos(normalizarProjetos(dadosNuvem.projetos))
-            setDemandas(normalizarDemandas(dadosNuvem.demandas))
-            setAgents(dadosNuvem.agents)
-            // Mesclar usuários da nuvem com locais (evitar perder cadastros locais)
-            if (dadosNuvem.usuarios && dadosNuvem.usuarios.length > 0) {
-              const usuariosLocais = carregarUsuarios()
-              const idsLocais = new Set(usuariosLocais.map(u => u.id))
-              const novosUsuarios = dadosNuvem.usuarios.filter(u => !idsLocais.has(u.id))
-              if (novosUsuarios.length > 0) {
-                salvarUsuarios([...usuariosLocais, ...novosUsuarios])
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Erro ao carregar dados da nuvem:', error)
-        } finally {
-          if (ativo) {
-            setNuvemInicializada(true)
-            setCarregandoInicial(false)
-          }
+    ;(async () => {
+      if (!nuvemHabilitada) {
+        if (!ativo) return
+        setErroInicial('Firebase não configurado. Este app funciona somente com nuvem.')
+        setCarregandoInicial(false)
+        return
+      }
+
+      try {
+        const dadosNuvem = await carregarDadosNuvem()
+        if (!ativo) return
+
+        setProjetos(normalizarProjetos(dadosNuvem.projetos))
+        setDemandas(normalizarDemandas(dadosNuvem.demandas))
+        setAgents(dadosNuvem.agents)
+        setUsuarios(dadosNuvem.usuarios)
+      } catch (error) {
+        if (!ativo) return
+        const mensagem = error instanceof Error ? error.message : String(error)
+        setErroInicial(mensagem)
+      } finally {
+        if (ativo) {
+          setNuvemInicializada(true)
+          setCarregandoInicial(false)
         }
-      })()
+      }
+    })()
 
     return () => {
       ativo = false
@@ -206,30 +174,30 @@ function App() {
       return
     }
 
+    let ativo = true
     setStatusSync('sincronizando')
 
-    const t = window.setTimeout(() => {
-      const usuarios = carregarUsuarios()
-      salvarDadosNuvem({ projetos, demandas, agents, usuarios })
-        .then((resultado) => {
-          if (resultado.offline) {
-            setStatusSync('offline')
-          } else if (resultado.semPermissao) {
-            setStatusSync('sincronizado')
-          } else if (resultado.sucesso) {
-            setStatusSync('sincronizado')
-          } else {
-            setStatusSync('erro')
-          }
-        })
-        .catch((error) => {
-          console.error('Falha ao salvar dados no Firebase:', error)
+    salvarDadosNuvem({ projetos, demandas, agents, usuarios })
+      .then((resultado) => {
+        if (!ativo) return
+        if (resultado.offline) {
+          setStatusSync('offline')
+        } else if (resultado.sucesso) {
           setStatusSync('sincronizado')
-        })
-    }, 650)
+        } else {
+          setStatusSync('erro')
+        }
+      })
+      .catch((error) => {
+        if (!ativo) return
+        console.error('Falha ao salvar dados no Firebase:', error)
+        setStatusSync('erro')
+      })
 
-    return () => window.clearTimeout(t)
-  }, [projetos, demandas, agents, nuvemInicializada, online])
+    return () => {
+      ativo = false
+    }
+  }, [projetos, demandas, agents, usuarios, nuvemInicializada, online])
 
   useEffect(() => {
     const onRouteChange = () => {
@@ -280,7 +248,6 @@ function App() {
       const projeto = projetos.find((p) => p.id === dados.projetoId)
       if (!projeto || !usuarioLogado) return
 
-      const usuarios = carregarUsuarios()
       const responsaveisDemanda = usuarios
         .filter((u) => dados.responsaveisIds.includes(u.id))
         .map((u) => ({ id: u.id, nome: u.nome, iniciais: u.iniciais }))
@@ -302,11 +269,12 @@ function App() {
         numeroCriancasAcolhidas: dados.numeroCriancasAcolhidas,
         comentarios: [],
       }
+
       setDemandas((prev) => [nova, ...prev])
       setMensagemSucesso('Demanda criada com sucesso.')
       setTimeout(() => setMensagemSucesso(''), 3000)
     },
-    [projetos, usuarioLogado]
+    [projetos, usuarioLogado, usuarios]
   )
 
   const handleAdicionarProjeto = useCallback(
@@ -363,11 +331,7 @@ function App() {
   }, [])
 
   const handleToggleFinalizada = useCallback((id: string) => {
-    setDemandas((prev) =>
-      prev.map((d) =>
-        d.id === id ? { ...d, finalizada: !d.finalizada } : d
-      )
-    )
+    setDemandas((prev) => prev.map((d) => (d.id === id ? { ...d, finalizada: !d.finalizada } : d)))
   }, [])
 
   const handleAdicionarComentario = useCallback(
@@ -428,48 +392,111 @@ function App() {
 
   const handleAgentsEditar = useCallback(
     (id: string, dados: { nome: string }) => {
-      setAgents((prev) =>
-        prev.map((a) => (a.id === id ? { ...a, nome: dados.nome } : a))
-      )
+      setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, nome: dados.nome } : a)))
     },
     []
   )
 
   const handleAgentsToggleAtivo = useCallback((id: string) => {
-    setAgents((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, ativo: !a.ativo } : a))
-    )
+    setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, ativo: !a.ativo } : a)))
   }, [])
 
   const handleAgentsExcluir = useCallback((id: string) => {
     setAgents((prev) => prev.filter((a) => a.id !== id))
   }, [])
 
-  const handleEntrar = useCallback(
-    (usuario: Usuario) => {
-      salvarUsuarioLogado(usuario)
-      setUsuarioLogado(usuario)
-      // Forçar sync após login/cadastro
-      if (nuvemHabilitada && navigator.onLine) {
-        const usuarios = carregarUsuarios()
-        salvarDadosNuvem({ projetos, demandas, agents, usuarios }).catch(console.error)
+  const handleAutenticar = useCallback(
+    async (email: string, senha: string): Promise<ResultadoAcesso> => {
+      if (!email.trim() || !senha) {
+        return { sucesso: false, erro: 'Email e senha são obrigatórios' }
       }
+
+      const emailNormalizado = email.trim().toLowerCase()
+      const usuario = usuarios.find(
+        (u) => u.email.toLowerCase() === emailNormalizado && u.senha === senha
+      )
+
+      if (!usuario) {
+        return { sucesso: false, erro: 'Email ou senha incorretos' }
+      }
+
+      return { sucesso: true, usuario }
     },
-    [projetos, demandas, agents]
+    [usuarios]
   )
 
+  const handleCadastrar = useCallback(
+    async (dados: { nome: string; email: string; senha: string; cargo: Usuario['cargo'] }): Promise<ResultadoAcesso> => {
+      const { nome, email, senha, cargo } = dados
+
+      if (!nome.trim()) {
+        return { sucesso: false, erro: 'Nome é obrigatório' }
+      }
+      if (!email.trim() || !email.includes('@')) {
+        return { sucesso: false, erro: 'Email inválido' }
+      }
+      if (!/^\d{4}$/.test(senha)) {
+        return { sucesso: false, erro: 'Senha deve ter exatamente 4 dígitos' }
+      }
+
+      const emailNormalizado = email.trim().toLowerCase()
+      const emailExiste = usuarios.some((u) => u.email.toLowerCase() === emailNormalizado)
+      if (emailExiste) {
+        return { sucesso: false, erro: 'Este email já está cadastrado' }
+      }
+
+      const novoUsuario: Usuario = {
+        id: gerarId(),
+        nome: nome.trim(),
+        email: emailNormalizado,
+        senha,
+        cargo,
+        iniciais: gerarIniciais(nome),
+        criadoEm: new Date().toISOString(),
+      }
+
+      const proximoUsuarios = [...usuarios, novoUsuario]
+      const resultadoSync = await salvarDadosNuvem({
+        projetos,
+        demandas,
+        agents,
+        usuarios: proximoUsuarios,
+      })
+
+      if (!resultadoSync.sucesso) {
+        return { sucesso: false, erro: mensagemErroSync(resultadoSync) }
+      }
+
+      setUsuarios(proximoUsuarios)
+      return { sucesso: true, usuario: novoUsuario }
+    },
+    [usuarios, projetos, demandas, agents]
+  )
+
+  const handleEntrar = useCallback((usuario: Usuario) => {
+    setUsuarioLogado(usuario)
+  }, [])
+
   const handleSair = useCallback(() => {
-    limparUsuarioLogado()
     setUsuarioLogado(null)
   }, [])
 
-  // Mostrar loading durante carregamento inicial da nuvem
   if (carregandoInicial) {
-    return <LoadingScreen mensagem="Sincronizando dados..." />
+    return <LoadingScreen mensagem="Sincronizando dados na nuvem..." />
+  }
+
+  if (erroInicial) {
+    return <LoadingScreen mensagem={erroInicial} />
   }
 
   if (!usuarioLogado) {
-    return <Login onEntrar={handleEntrar} />
+    return (
+      <Login
+        onEntrar={handleEntrar}
+        onAutenticar={handleAutenticar}
+        onCadastrar={handleCadastrar}
+      />
+    )
   }
 
   const getStatusSyncLabel = () => {
@@ -489,13 +516,8 @@ function App() {
     <div className="app">
       <Header usuarioAtual={usuarioLogado} onSair={handleSair} />
 
-      {/* Indicador de status */}
       {nuvemHabilitada && (
-        <div
-          className={`app-status app-status--${statusSync}`}
-          role="status"
-          aria-live="polite"
-        >
+        <div className={`app-status app-status--${statusSync}`} role="status" aria-live="polite">
           {getStatusSyncLabel()}
         </div>
       )}
