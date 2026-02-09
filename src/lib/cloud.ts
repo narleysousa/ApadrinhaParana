@@ -23,6 +23,24 @@ function asArray<T>(valor: unknown): T[] {
   return Array.isArray(valor) ? (valor as T[]) : []
 }
 
+function limparUndefined<T>(valor: T): T {
+  if (Array.isArray(valor)) {
+    return valor.map((item) => limparUndefined(item)) as T
+  }
+
+  if (valor && typeof valor === 'object') {
+    const resultado: Record<string, unknown> = {}
+    for (const [chave, conteudo] of Object.entries(valor as Record<string, unknown>)) {
+      if (conteudo !== undefined) {
+        resultado[chave] = limparUndefined(conteudo)
+      }
+    }
+    return resultado as T
+  }
+
+  return valor
+}
+
 export async function carregarDadosNuvem(): Promise<SnapshotNuvem> {
   if (!db || !firebaseConfigurado) {
     throw new Error('Firebase não está configurado.')
@@ -73,10 +91,10 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
     await setDoc(
       ref,
       {
-        projetos: dados.projetos,
-        demandas: dados.demandas,
-        agents: dados.agents,
-        usuarios: dados.usuarios,
+        projetos: limparUndefined(dados.projetos),
+        demandas: limparUndefined(dados.demandas),
+        agents: limparUndefined(dados.agents),
+        usuarios: limparUndefined(dados.usuarios),
         atualizadoEm: serverTimestamp(),
       },
       { merge: true }

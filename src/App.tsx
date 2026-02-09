@@ -252,7 +252,7 @@ function App() {
         .filter((u) => dados.responsaveisIds.includes(u.id))
         .map((u) => ({ id: u.id, nome: u.nome, iniciais: u.iniciais }))
 
-      const nova: Demanda = {
+      const novaBase: Demanda = {
         id: gerarId(),
         titulo: dados.titulo,
         projeto,
@@ -265,9 +265,14 @@ function App() {
         progresso: 0,
         criadaEm: new Date().toISOString(),
         finalizada: false,
-        agentId: dados.agentId,
-        numeroCriancasAcolhidas: dados.numeroCriancasAcolhidas,
         comentarios: [],
+      }
+      const nova: Demanda = {
+        ...novaBase,
+        ...(dados.agentId ? { agentId: dados.agentId } : {}),
+        ...(typeof dados.numeroCriancasAcolhidas === 'number'
+          ? { numeroCriancasAcolhidas: dados.numeroCriancasAcolhidas }
+          : {}),
       }
 
       setDemandas((prev) => [nova, ...prev])
