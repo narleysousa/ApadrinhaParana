@@ -104,8 +104,30 @@ export function Login({ onEntrar }: LoginProps) {
     setter(apenasDigitos)
   }
 
+  const handleLoginTeste = () => {
+    const usuarioTeste: Usuario = {
+      id: 'teste-dev',
+      nome: 'Usuário Teste',
+      email: 'teste@teste.com',
+      iniciais: 'UT',
+      cargo: 'Psicóloga',
+      senha: '0000',
+      criadoEm: new Date().toISOString(),
+    }
+    onEntrar(usuarioTeste)
+  }
+
   return (
     <div className="login">
+      <button
+        type="button"
+        className="login-btn-teste"
+        onClick={handleLoginTeste}
+        title="Entrar em modo de teste"
+        aria-label="Entrar em modo de teste"
+      >
+        ⚙️
+      </button>
       <div className="login-container">
         <aside className="login-panel login-panel-esq">
           <h1 className="login-panel-titulo">
