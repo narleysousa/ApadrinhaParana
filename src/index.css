@@ -5,6 +5,7 @@
 :root {
   --cor-primaria: #2563eb;
   --cor-primaria-hover: #1d4ed8;
+  --cor-primaria-light: rgba(37, 99, 235, 0.1);
   --cor-fundo: #f8fafc;
   --cor-card: #ffffff;
   --cor-borda: #e2e8f0;
@@ -14,11 +15,16 @@
   --cor-media: #ca8a04;
   --cor-baixa: #16a34a;
   --cor-alerta: #fef3c7;
+  --cor-sucesso: #dcfce7;
+  --cor-sucesso-texto: #166534;
   --sombra: 0 1px 3px rgba(0, 0, 0, 0.08);
   --sombra-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --sombra-elevada: 0 4px 16px rgba(0, 0, 0, 0.1);
   --radius: 8px;
   --radius-sm: 6px;
+  --radius-lg: 12px;
   --transition: 0.2s ease;
+  --transition-fast: 0.15s ease;
 }
 
 body {

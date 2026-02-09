@@ -5,8 +5,8 @@
 }
 
 .minhas-demandas-resumo {
-  background: var(--cor-card);
-  border-radius: 8px;
+  background: linear-gradient(135deg, var(--cor-card) 0%, #f8fafc 100%);
+  border-radius: var(--radius-lg, 12px);
   padding: 1.25rem;
   box-shadow: var(--sombra-card);
   border: 1px solid var(--cor-borda);
@@ -229,14 +229,15 @@
 .minhas-tarefas-card {
   padding: 1rem;
   border: 1px solid var(--cor-borda);
-  border-radius: var(--radius);
-  background: var(--cor-fundo);
-  transition: box-shadow var(--transition), transform var(--transition);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--cor-card);
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
 }
 
 .minhas-tarefas-card:hover {
-  box-shadow: var(--sombra-card);
-  transform: translateY(-2px);
+  box-shadow: var(--sombra-elevada, 0 4px 16px rgba(0, 0, 0, 0.1));
+  transform: translateY(-3px);
+  border-color: var(--cor-primaria-light, rgba(37, 99, 235, 0.3));
 }
 
 .minhas-tarefas-card.finalizada {

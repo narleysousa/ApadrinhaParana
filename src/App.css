@@ -70,12 +70,14 @@
 }
 
 .app-nav-btn:hover {
-  color: var(--cor-texto);
+  color: var(--cor-primaria);
+  background: var(--cor-primaria-light, rgba(37, 99, 235, 0.05));
 }
 
 .app-nav-btn.ativo {
   color: var(--cor-primaria);
   border-bottom-color: var(--cor-primaria);
+  font-weight: 600;
 }
 
 .app-toast {

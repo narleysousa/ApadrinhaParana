@@ -1,9 +1,14 @@
 .nova-demanda {
   background: var(--cor-card);
-  border-radius: 8px;
+  border-radius: var(--radius-lg, 12px);
   padding: 1.5rem;
   box-shadow: var(--sombra-card);
   border: 1px solid var(--cor-borda);
+  transition: box-shadow var(--transition);
+}
+
+.nova-demanda:hover {
+  box-shadow: var(--sombra-elevada, 0 4px 16px rgba(0, 0, 0, 0.1));
 }
 
 .nova-demanda-titulo {
@@ -133,11 +138,14 @@
 
 .nova-demanda-btn-criar:hover:not(:disabled) {
   background: var(--cor-primaria-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .nova-demanda-btn-criar:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
 }
 
 .nova-demanda-required {
