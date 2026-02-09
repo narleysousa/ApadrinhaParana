@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Usuario, Cargo } from '../../types'
 import { CARGOS_DISPONIVEIS } from '../../constants'
 import './Login.css'
@@ -29,6 +29,8 @@ const BENEFICIOS = [
   'Organize por projeto e cidade',
 ]
 
+const CHAVE_EMAIL_LEMBRADO = 'apadrinha-parana-email-lembrado'
+
 export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
   const [aba, setAba] = useState<'entrar' | 'criar'>('entrar')
   const [carregando, setCarregando] = useState(false)
@@ -36,12 +38,21 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
 
   const [emailLogin, setEmailLogin] = useState('')
   const [senhaLogin, setSenhaLogin] = useState('')
+  const [lembrarLogin, setLembrarLogin] = useState(false)
 
   const [nome, setNome] = useState('')
   const [emailCadastro, setEmailCadastro] = useState('')
   const [cargo, setCargo] = useState<Cargo>('Psicóloga')
   const [senhaCadastro, setSenhaCadastro] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('')
+
+  useEffect(() => {
+    const emailSalvo = localStorage.getItem(CHAVE_EMAIL_LEMBRADO)
+    if (emailSalvo) {
+      setEmailLogin(emailSalvo)
+      setLembrarLogin(true)
+    }
+  }, [])
 
   const limparErro = () => setErro('')
 
@@ -54,6 +65,11 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
       const resultado = await onAutenticar(emailLogin, senhaLogin)
 
       if (resultado.sucesso && resultado.usuario) {
+        if (lembrarLogin) {
+          localStorage.setItem(CHAVE_EMAIL_LEMBRADO, emailLogin.trim())
+        } else {
+          localStorage.removeItem(CHAVE_EMAIL_LEMBRADO)
+        }
         onEntrar(resultado.usuario)
       } else {
         setErro(resultado.erro || 'Erro ao fazer login')
@@ -185,6 +201,16 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
                   autoComplete="current-password"
                   disabled={carregando}
                 />
+              </label>
+
+              <label className="login-checkbox">
+                <input
+                  type="checkbox"
+                  checked={lembrarLogin}
+                  onChange={(e) => setLembrarLogin(e.target.checked)}
+                  disabled={carregando}
+                />
+                <span>Lembrar meu email</span>
               </label>
 
               <button
