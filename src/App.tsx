@@ -27,6 +27,7 @@ interface ResultadoAcesso {
 
 const ROTA_DEMANDAS = '#/'
 const ROTA_AGENTS = '#/agents'
+const CHAVE_SESSAO_USUARIO = 'apadrinha-parana-sessao-usuario-id'
 
 const NOMES_PROJETOS_REMOVIDOS = new Set([
   'em andamento',
@@ -78,6 +79,30 @@ function mensagemErroSync(resultado: ResultadoSync): string {
   if (resultado.offline) return 'Sem internet para salvar na nuvem.'
   if (resultado.semPermissao) return 'Sem permissão para gravar no Firebase.'
   return 'Falha ao salvar na nuvem.'
+}
+
+function lerUsuarioSessaoId(): string | null {
+  try {
+    return sessionStorage.getItem(CHAVE_SESSAO_USUARIO)
+  } catch {
+    return null
+  }
+}
+
+function salvarUsuarioSessaoId(usuarioId: string): void {
+  try {
+    sessionStorage.setItem(CHAVE_SESSAO_USUARIO, usuarioId)
+  } catch {
+    // Ignorar indisponibilidade de sessionStorage
+  }
+}
+
+function limparUsuarioSessaoId(): void {
+  try {
+    sessionStorage.removeItem(CHAVE_SESSAO_USUARIO)
+  } catch {
+    // Ignorar indisponibilidade de sessionStorage
+  }
 }
 
 function App() {
@@ -149,6 +174,12 @@ function App() {
         setDemandas(normalizarDemandas(dadosNuvem.demandas))
         setAgents(dadosNuvem.agents)
         setUsuarios(dadosNuvem.usuarios)
+
+        const usuarioSessaoId = lerUsuarioSessaoId()
+        if (usuarioSessaoId) {
+          const usuarioSessao = dadosNuvem.usuarios.find((u) => u.id === usuarioSessaoId) ?? null
+          setUsuarioLogado(usuarioSessao)
+        }
       } catch (error) {
         if (!ativo) return
         const mensagem = error instanceof Error ? error.message : String(error)
@@ -479,10 +510,12 @@ function App() {
   )
 
   const handleEntrar = useCallback((usuario: Usuario) => {
+    salvarUsuarioSessaoId(usuario.id)
     setUsuarioLogado(usuario)
   }, [])
 
   const handleSair = useCallback(() => {
+    limparUsuarioSessaoId()
     setUsuarioLogado(null)
   }, [])
 
