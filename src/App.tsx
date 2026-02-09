@@ -19,6 +19,7 @@ import {
   salvarUsuarioLogado,
   limparUsuarioLogado,
   carregarUsuarios,
+  salvarUsuarios,
 } from './lib/utils'
 import { carregarDadosNuvem, nuvemHabilitada, salvarDadosNuvem } from './lib/cloud'
 import './components/LoadingScreen.css'
@@ -172,6 +173,15 @@ function App() {
             setProjetos(normalizarProjetos(dadosNuvem.projetos))
             setDemandas(normalizarDemandas(dadosNuvem.demandas))
             setAgents(dadosNuvem.agents)
+            // Mesclar usuários da nuvem com locais (evitar perder cadastros locais)
+            if (dadosNuvem.usuarios && dadosNuvem.usuarios.length > 0) {
+              const usuariosLocais = carregarUsuarios()
+              const idsLocais = new Set(usuariosLocais.map(u => u.id))
+              const novosUsuarios = dadosNuvem.usuarios.filter(u => !idsLocais.has(u.id))
+              if (novosUsuarios.length > 0) {
+                salvarUsuarios([...usuariosLocais, ...novosUsuarios])
+              }
+            }
           }
         } catch (error) {
           console.error('Erro ao carregar dados da nuvem:', error)
@@ -199,7 +209,8 @@ function App() {
     setStatusSync('sincronizando')
 
     const t = window.setTimeout(() => {
-      salvarDadosNuvem({ projetos, demandas, agents })
+      const usuarios = carregarUsuarios()
+      salvarDadosNuvem({ projetos, demandas, agents, usuarios })
         .then((resultado) => {
           if (resultado.offline) {
             setStatusSync('offline')

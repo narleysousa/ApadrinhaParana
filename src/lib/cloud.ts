@@ -1,5 +1,5 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import type { Agent, Demanda, Projeto } from '../types'
+import type { Agent, Demanda, Projeto, Usuario } from '../types'
 import { db, firebaseConfigurado } from './firebase'
 
 const COLECAO_APP = 'apadrinhaParana'
@@ -9,12 +9,14 @@ interface DadosNuvem {
   projetos?: unknown
   demandas?: unknown
   agents?: unknown
+  usuarios?: unknown
 }
 
 export interface SnapshotNuvem {
   projetos: Projeto[]
   demandas: Demanda[]
   agents: Agent[]
+  usuarios: Usuario[]
 }
 
 function asArray<T>(valor: unknown): T[] {
@@ -34,6 +36,7 @@ export async function carregarDadosNuvem(): Promise<SnapshotNuvem | null> {
       projetos: asArray<Projeto>(data.projetos),
       demandas: asArray<Demanda>(data.demandas),
       agents: asArray<Agent>(data.agents),
+      usuarios: asArray<Usuario>(data.usuarios),
     }
   } catch (error) {
     // Silenciar erros de permissão - dados locais continuam funcionando
@@ -65,6 +68,7 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
         projetos: dados.projetos,
         demandas: dados.demandas,
         agents: dados.agents,
+        usuarios: dados.usuarios,
         atualizadoEm: serverTimestamp(),
       },
       { merge: true }
@@ -89,3 +93,4 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
 }
 
 export const nuvemHabilitada = firebaseConfigurado
+
