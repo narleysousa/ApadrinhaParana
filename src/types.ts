@@ -1,5 +1,5 @@
 export type Prioridade = 'ALTA' | 'MÉDIA' | 'BAIXA'
-export type Cargo = 'Psicóloga' | 'Assistente Social' | 'Coordenador' | 'Técnico' | 'Administrativo'
+export type Cargo = 'Psicóloga'
 
 export interface Usuario {
   id: string
