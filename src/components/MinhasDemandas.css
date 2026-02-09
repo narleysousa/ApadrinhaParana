@@ -401,6 +401,23 @@
   flex: 1;
 }
 
+.minhas-tarefas-comentario-excluir {
+  margin-left: auto;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.minhas-tarefas-comentario-excluir:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 .minhas-tarefas-comentario-meta {
   margin: 0 0 0.2rem;
   font-size: 0.75rem;

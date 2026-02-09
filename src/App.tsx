@@ -386,6 +386,21 @@ function App() {
     [usuarioLogado]
   )
 
+  const handleExcluirComentario = useCallback(
+    (demandaId: string, comentarioId: string) => {
+      setDemandas((prev) =>
+        prev.map((d) => {
+          if (d.id !== demandaId) return d
+          return {
+            ...d,
+            comentarios: (d.comentarios ?? []).filter((c) => c.id !== comentarioId),
+          }
+        })
+      )
+    },
+    []
+  )
+
   const handleAgentsAdicionar = useCallback((dados: { nome: string }) => {
     setAgents((prev) => [
       ...prev,
@@ -516,6 +531,7 @@ function App() {
               onExcluir={handleExcluir}
               onToggleFinalizada={handleToggleFinalizada}
               onAdicionarComentario={handleAdicionarComentario}
+              onExcluirComentario={handleExcluirComentario}
             />
           </div>
         </main>

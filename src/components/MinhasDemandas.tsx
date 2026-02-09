@@ -16,6 +16,7 @@ interface MinhasDemandasProps {
   onExcluir: (id: string) => void
   onToggleFinalizada: (id: string) => void
   onAdicionarComentario: (demandaId: string, texto: string) => void
+  onExcluirComentario: (demandaId: string, comentarioId: string) => void
 }
 
 export function MinhasDemandas({
@@ -26,6 +27,7 @@ export function MinhasDemandas({
   onExcluir,
   onToggleFinalizada,
   onAdicionarComentario,
+  onExcluirComentario,
 }: MinhasDemandasProps) {
   const [buscaInput, setBuscaInput] = useState('')
   const [busca, setBusca] = useState('')
@@ -361,6 +363,15 @@ export function MinhasDemandas({
                               </p>
                               <p className="minhas-tarefas-comentario-texto">{comentario.texto}</p>
                             </div>
+                            <button
+                              type="button"
+                              className="minhas-tarefas-comentario-excluir"
+                              onClick={() => onExcluirComentario(d.id, comentario.id)}
+                              title="Excluir comentário"
+                              aria-label="Excluir comentário"
+                            >
+                              🗑
+                            </button>
                           </li>
                         ))}
                       </ul>
