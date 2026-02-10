@@ -58,10 +58,11 @@ export function MinhasDemandas({
         d.descricao.toLowerCase().includes(busca.toLowerCase())
       const matchProjeto =
         filtroProjeto === 'todos' || d.projeto.id === filtroProjeto
+      const responsaveisDemanda = getResponsaveisDemanda(d)
       const matchResponsavel =
         filtroResponsavel === 'todos' ||
-        (filtroResponsavel === 'eu' && d.responsaveis.some((r) => r.id === usuarioAtualId)) ||
-        d.responsaveis.some((r) => r.id === filtroResponsavel)
+        (filtroResponsavel === 'eu' && responsaveisDemanda.some((r) => r.id === usuarioAtualId)) ||
+        responsaveisDemanda.some((r) => r.id === filtroResponsavel)
       return (
         matchBusca &&
         matchProjeto &&
@@ -138,6 +139,10 @@ export function MinhasDemandas({
     })}`
   }
 
+  function getResponsaveisDemanda(demanda: Demanda): Responsavel[] {
+    return Array.isArray(demanda.responsaveis) ? demanda.responsaveis : []
+  }
+
   return (
     <div className="minhas-demandas">
       <section className="minhas-demandas-resumo">
@@ -207,7 +212,10 @@ export function MinhasDemandas({
               const nomeArquivo = abaDemandas === 'andamento'
                 ? 'demandas_em_andamento'
                 : 'demandas_finalizadas'
-              exportarDemandasExcel(demandasParaExportar, agents, nomeArquivo)
+              void exportarDemandasExcel(demandasParaExportar, agents, nomeArquivo).catch((error) => {
+                console.error('Falha ao exportar demandas para Excel:', error)
+                alert('Não foi possível exportar para Excel.')
+              })
             }}
             title={`Exportar ${abaDemandas === 'andamento' ? 'em andamento' : 'finalizadas'} para Excel`}
           >
@@ -266,6 +274,7 @@ export function MinhasDemandas({
           {demandasFiltradas.map((d) => {
             const abaCard = abasCard[d.id] ?? 'detalhes'
             const comentarios = Array.isArray(d.comentarios) ? d.comentarios : []
+            const responsaveisDemanda = getResponsaveisDemanda(d)
             const textoComentario = comentariosInput[d.id] ?? ''
             return (
               <li
@@ -334,7 +343,7 @@ export function MinhasDemandas({
                       <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
                     )}
                     <div className="minhas-tarefas-card-responsaveis">
-                      {d.responsaveis.map((r) => (
+                      {responsaveisDemanda.map((r) => (
                         <span
                           key={r.id}
                           className="minhas-tarefas-card-avatar"
@@ -344,8 +353,8 @@ export function MinhasDemandas({
                         </span>
                       ))}
                       <span className="minhas-tarefas-card-resp-texto">
-                        {d.responsaveis.length} Resp.
-                        {d.responsaveis.some((r) => r.id === usuarioAtualId)
+                        {responsaveisDemanda.length} Resp.
+                        {responsaveisDemanda.some((r) => r.id === usuarioAtualId)
                           ? ' (Você)'
                           : ''}
                       </span>

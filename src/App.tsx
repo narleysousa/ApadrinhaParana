@@ -37,16 +37,257 @@ const NOMES_PROJETOS_REMOVIDOS = new Set([
   'ir na padaria',
 ])
 
+function ehObjeto(valor: unknown): valor is Record<string, unknown> {
+  return typeof valor === 'object' && valor !== null
+}
+
+function textoLimpo(valor: unknown): string {
+  return typeof valor === 'string' ? valor.trim() : ''
+}
+
+function dataIsoSegura(valor: unknown): string {
+  if (typeof valor === 'string') {
+    const data = new Date(valor)
+    if (!Number.isNaN(data.getTime())) return data.toISOString()
+  }
+  return new Date().toISOString()
+}
+
+function prioridadeSegura(valor: unknown): Prioridade {
+  return valor === 'ALTA' || valor === 'MÉDIA' || valor === 'BAIXA' ? valor : 'MÉDIA'
+}
+
 function projetoEhRemovido(nome: string): boolean {
   return NOMES_PROJETOS_REMOVIDOS.has(nome.trim().toLowerCase())
 }
 
 function normalizarProjetos(lista: Projeto[]): Projeto[] {
-  return lista.filter((p) => p && !projetoEhRemovido(p.nome))
+  const ids = new Set<string>()
+  const nomes = new Set<string>()
+  const projetosNormalizados: Projeto[] = []
+
+  for (const entrada of lista as unknown[]) {
+    if (!ehObjeto(entrada)) continue
+    const nome = textoLimpo(entrada.nome)
+    if (!nome || projetoEhRemovido(nome)) continue
+
+    const id = textoLimpo(entrada.id) || gerarId()
+    const nomeNormalizado = nome.toLowerCase()
+    if (ids.has(id) || nomes.has(nomeNormalizado)) continue
+
+    ids.add(id)
+    nomes.add(nomeNormalizado)
+    projetosNormalizados.push({ id, nome })
+  }
+
+  return projetosNormalizados
 }
 
-function normalizarDemandas(lista: Demanda[]): Demanda[] {
-  return lista.filter((d) => d?.projeto && !projetoEhRemovido(d.projeto.nome))
+function normalizarUsuarios(lista: Usuario[]): Usuario[] {
+  const ids = new Set<string>()
+  const emails = new Set<string>()
+  const usuariosNormalizados: Usuario[] = []
+
+  for (const entrada of lista as unknown[]) {
+    if (!ehObjeto(entrada)) continue
+    const nome = textoLimpo(entrada.nome)
+    const email = textoLimpo(entrada.email).toLowerCase()
+    const senha = textoLimpo(entrada.senha)
+    if (!nome || !email || !/^\d{4}$/.test(senha)) continue
+
+    const id = textoLimpo(entrada.id) || gerarId()
+    if (ids.has(id) || emails.has(email)) continue
+
+    ids.add(id)
+    emails.add(email)
+    usuariosNormalizados.push({
+      id,
+      nome,
+      email,
+      senha,
+      cargo: 'Psicóloga',
+      iniciais: textoLimpo(entrada.iniciais) || gerarIniciais(nome),
+      criadoEm: dataIsoSegura(entrada.criadoEm),
+    })
+  }
+
+  return usuariosNormalizados
+}
+
+function normalizarAgents(lista: Agent[]): Agent[] {
+  const ids = new Set<string>()
+  const nomes = new Set<string>()
+  const agentsNormalizados: Agent[] = []
+
+  for (const entrada of lista as unknown[]) {
+    if (!ehObjeto(entrada)) continue
+    const nome = textoLimpo(entrada.nome)
+    if (!nome) continue
+
+    const id = textoLimpo(entrada.id) || gerarId()
+    const nomeNormalizado = nome.toLowerCase()
+    if (ids.has(id) || nomes.has(nomeNormalizado)) continue
+
+    ids.add(id)
+    nomes.add(nomeNormalizado)
+    agentsNormalizados.push({
+      id,
+      nome,
+      ativo: typeof entrada.ativo === 'boolean' ? entrada.ativo : true,
+      criadoEm: dataIsoSegura(entrada.criadoEm),
+    })
+  }
+
+  return agentsNormalizados
+}
+
+function normalizarResponsavel(
+  valor: unknown,
+  usuariosPorId: Map<string, Usuario>
+): Responsavel | null {
+  if (!ehObjeto(valor)) return null
+
+  const id = textoLimpo(valor.id)
+  if (id && usuariosPorId.has(id)) {
+    const usuario = usuariosPorId.get(id)
+    if (usuario) {
+      return {
+        id: usuario.id,
+        nome: usuario.nome,
+        iniciais: usuario.iniciais,
+      }
+    }
+  }
+
+  const nome = textoLimpo(valor.nome)
+  if (!id || !nome) return null
+
+  return {
+    id,
+    nome,
+    iniciais: textoLimpo(valor.iniciais) || gerarIniciais(nome),
+  }
+}
+
+function normalizarComentarios(
+  comentariosEntrada: unknown,
+  usuariosPorId: Map<string, Usuario>
+): NonNullable<Demanda['comentarios']> {
+  if (!Array.isArray(comentariosEntrada)) return []
+
+  const comentariosNormalizados: NonNullable<Demanda['comentarios']> = []
+  for (const entrada of comentariosEntrada) {
+    if (!ehObjeto(entrada)) continue
+
+    const texto = textoLimpo(entrada.texto)
+    const autor = normalizarResponsavel(entrada.autor, usuariosPorId)
+    if (!texto || !autor) continue
+
+    comentariosNormalizados.push({
+      id: textoLimpo(entrada.id) || gerarId(),
+      texto,
+      criadoEm: dataIsoSegura(entrada.criadoEm),
+      autor,
+    })
+  }
+
+  return comentariosNormalizados
+}
+
+function normalizarDemandas(
+  lista: Demanda[],
+  projetos: Projeto[],
+  usuarios: Usuario[],
+  agents: Agent[]
+): Demanda[] {
+  const projetosPorId = new Map(projetos.map((p) => [p.id, p] as const))
+  const projetosPorNome = new Map(projetos.map((p) => [p.nome.toLowerCase(), p] as const))
+  const usuariosPorId = new Map(usuarios.map((u) => [u.id, u] as const))
+  const agentIds = new Set(agents.map((a) => a.id))
+  const idsDemandas = new Set<string>()
+  const responsavelPadrao = usuarios[0]
+    ? { id: usuarios[0].id, nome: usuarios[0].nome, iniciais: usuarios[0].iniciais }
+    : null
+  const demandasNormalizadas: Demanda[] = []
+
+  for (const entrada of lista as unknown[]) {
+    if (!ehObjeto(entrada)) continue
+
+    let projeto: Projeto | null = null
+    if (ehObjeto(entrada.projeto)) {
+      const projetoId = textoLimpo(entrada.projeto.id)
+      const projetoNome = textoLimpo(entrada.projeto.nome)
+      if (projetoId && projetosPorId.has(projetoId)) {
+        projeto = projetosPorId.get(projetoId) ?? null
+      } else if (projetoNome) {
+        projeto = projetosPorNome.get(projetoNome.toLowerCase()) ?? {
+          id: projetoId || gerarId(),
+          nome: projetoNome,
+        }
+      }
+    }
+
+    if (!projeto || projetoEhRemovido(projeto.nome)) continue
+
+    const id = textoLimpo(entrada.id) || gerarId()
+    if (idsDemandas.has(id)) continue
+    idsDemandas.add(id)
+
+    const titulo = textoLimpo(entrada.titulo)
+    if (!titulo) continue
+
+    const responsaveisEntrada = Array.isArray(entrada.responsaveis) ? entrada.responsaveis : []
+    const responsaveis = responsaveisEntrada
+      .map((r) => normalizarResponsavel(r, usuariosPorId))
+      .filter((r): r is Responsavel => Boolean(r))
+    const responsaveisNormalizados =
+      responsaveis.length > 0
+        ? responsaveis
+        : responsavelPadrao
+          ? [responsavelPadrao]
+          : []
+
+    const progressoNumero =
+      typeof entrada.progresso === 'number' ? entrada.progresso : Number(entrada.progresso)
+    const progresso = Number.isFinite(progressoNumero)
+      ? Math.max(0, Math.min(100, Math.round(progressoNumero)))
+      : 0
+
+    const numeroCriancasNumero =
+      typeof entrada.numeroCriancasAcolhidas === 'number'
+        ? entrada.numeroCriancasAcolhidas
+        : Number(entrada.numeroCriancasAcolhidas)
+    const numeroCriancasAcolhidas =
+      Number.isFinite(numeroCriancasNumero) && numeroCriancasNumero >= 0
+        ? Math.floor(numeroCriancasNumero)
+        : undefined
+
+    const agentId = textoLimpo(entrada.agentId)
+    const demanda: Demanda = {
+      id,
+      titulo,
+      projeto,
+      responsaveis: responsaveisNormalizados,
+      prioridade: prioridadeSegura(entrada.prioridade),
+      descricao: textoLimpo(entrada.descricao),
+      progresso,
+      criadaEm: dataIsoSegura(entrada.criadaEm),
+      finalizada: Boolean(entrada.finalizada),
+      comentarios: normalizarComentarios(entrada.comentarios, usuariosPorId),
+    }
+
+    if (agentId && agentIds.has(agentId)) {
+      demanda.agentId = agentId
+    }
+
+    if (typeof numeroCriancasAcolhidas === 'number') {
+      demanda.numeroCriancasAcolhidas = numeroCriancasAcolhidas
+    }
+
+    demandasNormalizadas.push(demanda)
+  }
+
+  return demandasNormalizadas
 }
 
 function normalizarPath(pathname: string): string {
@@ -170,14 +411,37 @@ function App() {
         const dadosNuvem = await carregarDadosNuvem()
         if (!ativo) return
 
-        setProjetos(normalizarProjetos(dadosNuvem.projetos))
-        setDemandas(normalizarDemandas(dadosNuvem.demandas))
-        setAgents(dadosNuvem.agents)
-        setUsuarios(dadosNuvem.usuarios)
+        const usuariosNormalizados = normalizarUsuarios(dadosNuvem.usuarios)
+        const projetosNormalizados = normalizarProjetos(dadosNuvem.projetos)
+        const agentsNormalizados = normalizarAgents(dadosNuvem.agents)
+        const demandasNormalizadas = normalizarDemandas(
+          dadosNuvem.demandas,
+          projetosNormalizados,
+          usuariosNormalizados,
+          agentsNormalizados
+        )
+        const projetosCompletos = [...projetosNormalizados]
+        const projetosPorId = new Map(projetosCompletos.map((p) => [p.id, p] as const))
+        for (const demanda of demandasNormalizadas) {
+          if (!projetosPorId.has(demanda.projeto.id)) {
+            projetosPorId.set(demanda.projeto.id, demanda.projeto)
+            projetosCompletos.push(demanda.projeto)
+          }
+        }
+        const demandasComProjetoReferenciado = demandasNormalizadas.map((demanda) => {
+          const projeto = projetosPorId.get(demanda.projeto.id) ?? demanda.projeto
+          return projeto === demanda.projeto ? demanda : { ...demanda, projeto }
+        })
+
+        setProjetos(projetosCompletos)
+        setDemandas(demandasComProjetoReferenciado)
+        setAgents(agentsNormalizados)
+        setUsuarios(usuariosNormalizados)
 
         const usuarioSessaoId = lerUsuarioSessaoId()
         if (usuarioSessaoId) {
-          const usuarioSessao = dadosNuvem.usuarios.find((u) => u.id === usuarioSessaoId) ?? null
+          const usuarioSessao =
+            usuariosNormalizados.find((u) => u.id === usuarioSessaoId) ?? null
           setUsuarioLogado(usuarioSessao)
         }
       } catch (error) {
@@ -415,20 +679,46 @@ function App() {
   )
 
   const handleAgentsAdicionar = useCallback((dados: { nome: string }) => {
-    setAgents((prev) => [
-      ...prev,
-      {
-        id: gerarId(),
-        nome: dados.nome,
-        ativo: true,
-        criadoEm: new Date().toISOString(),
-      },
-    ])
+    const nomeLimpo = dados.nome.trim()
+    if (!nomeLimpo) return
+
+    setAgents((prev) => {
+      const nomeNormalizado = nomeLimpo.toLowerCase()
+      const existente = prev.find((a) => a.nome.trim().toLowerCase() === nomeNormalizado)
+
+      if (existente) {
+        if (!existente.ativo) {
+          return prev.map((a) => (a.id === existente.id ? { ...a, ativo: true } : a))
+        }
+        return prev
+      }
+
+      return [
+        ...prev,
+        {
+          id: gerarId(),
+          nome: nomeLimpo,
+          ativo: true,
+          criadoEm: new Date().toISOString(),
+        },
+      ]
+    })
   }, [])
 
   const handleAgentsEditar = useCallback(
     (id: string, dados: { nome: string }) => {
-      setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, nome: dados.nome } : a)))
+      const nomeLimpo = dados.nome.trim()
+      if (!nomeLimpo) return
+
+      setAgents((prev) => {
+        const nomeNormalizado = nomeLimpo.toLowerCase()
+        const nomeExisteEmOutro = prev.some(
+          (a) => a.id !== id && a.nome.trim().toLowerCase() === nomeNormalizado
+        )
+        if (nomeExisteEmOutro) return prev
+
+        return prev.map((a) => (a.id === id ? { ...a, nome: nomeLimpo } : a))
+      })
     },
     []
   )

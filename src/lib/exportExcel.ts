@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx'
 import type { Demanda, Agent } from '../types'
 import { formatarData } from './utils'
 
@@ -17,7 +16,9 @@ interface DemandaExcel {
 
 function formatarDemandaParaExcel(demanda: Demanda, agents: Agent[]): DemandaExcel {
     const cidade = agents.find(a => a.id === demanda.agentId)?.nome ?? '-'
-    const responsaveis = demanda.responsaveis.map(r => r.nome).join(', ') || '-'
+    const responsaveis = (Array.isArray(demanda.responsaveis) ? demanda.responsaveis : [])
+        .map(r => r.nome)
+        .join(', ') || '-'
 
     return {
         'Título': demanda.titulo,
@@ -33,15 +34,17 @@ function formatarDemandaParaExcel(demanda: Demanda, agents: Agent[]): DemandaExc
     }
 }
 
-export function exportarDemandasExcel(
+export async function exportarDemandasExcel(
     demandas: Demanda[],
     agents: Agent[],
     nomeArquivo: string
-): void {
+): Promise<void> {
     if (demandas.length === 0) {
         alert('Não há demandas para exportar.')
         return
     }
+
+    const XLSX = await import('xlsx')
 
     const dadosFormatados = demandas.map(d => formatarDemandaParaExcel(d, agents))
 

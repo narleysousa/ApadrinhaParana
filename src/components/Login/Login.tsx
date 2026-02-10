@@ -31,6 +31,26 @@ const BENEFICIOS = [
 
 const CHAVE_EMAIL_LEMBRADO = 'apadrinha-parana-email-lembrado'
 
+function lerEmailLembrado(): string {
+  try {
+    return localStorage.getItem(CHAVE_EMAIL_LEMBRADO) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function atualizarEmailLembrado(email: string | null): void {
+  try {
+    if (email) {
+      localStorage.setItem(CHAVE_EMAIL_LEMBRADO, email)
+    } else {
+      localStorage.removeItem(CHAVE_EMAIL_LEMBRADO)
+    }
+  } catch {
+    // Ignorar indisponibilidade de localStorage
+  }
+}
+
 export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
   const [aba, setAba] = useState<'entrar' | 'criar'>('entrar')
   const [carregando, setCarregando] = useState(false)
@@ -47,7 +67,7 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
   const [confirmarSenha, setConfirmarSenha] = useState('')
 
   useEffect(() => {
-    const emailSalvo = localStorage.getItem(CHAVE_EMAIL_LEMBRADO)
+    const emailSalvo = lerEmailLembrado()
     if (emailSalvo) {
       setEmailLogin(emailSalvo)
       setLembrarLogin(true)
@@ -66,9 +86,9 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
 
       if (resultado.sucesso && resultado.usuario) {
         if (lembrarLogin) {
-          localStorage.setItem(CHAVE_EMAIL_LEMBRADO, emailLogin.trim())
+          atualizarEmailLembrado(emailLogin.trim())
         } else {
-          localStorage.removeItem(CHAVE_EMAIL_LEMBRADO)
+          atualizarEmailLembrado(null)
         }
         onEntrar(resultado.usuario)
       } else {
