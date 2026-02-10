@@ -97,7 +97,9 @@ export function MinhasDemandas({
     return demandas.filter((d) => {
       if (d.finalizada) return false
       const criada = new Date(d.criadaEm)
-      const dias = (agora.getTime() - criada.getTime()) / (1000 * 60 * 60 * 24)
+      const ts = criada.getTime()
+      if (Number.isNaN(ts)) return false
+      const dias = (agora.getTime() - ts) / (1000 * 60 * 60 * 24)
       return dias >= DIAS_DEMANDA_ANTIGA
     })
   }, [demandas])
@@ -129,6 +131,7 @@ export function MinhasDemandas({
 
   const formatarDataHora = (iso: string) => {
     const data = new Date(iso)
+    if (Number.isNaN(data.getTime())) return '-'
     return `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -298,26 +301,35 @@ export function MinhasDemandas({
                 <div className="minhas-tarefas-card-abas" role="tablist" aria-label="Abas da atividade">
                   <button
                     type="button"
+                    id={`tab-detalhes-${d.id}`}
                     className={`minhas-tarefas-card-aba ${abaCard === 'detalhes' ? 'ativa' : ''}`}
                     onClick={() => handleMudarAbaCard(d.id, 'detalhes')}
                     role="tab"
                     aria-selected={abaCard === 'detalhes'}
+                    aria-controls={`panel-detalhes-${d.id}`}
                   >
                     Detalhes
                   </button>
                   <button
                     type="button"
+                    id={`tab-comentarios-${d.id}`}
                     className={`minhas-tarefas-card-aba ${abaCard === 'comentarios' ? 'ativa' : ''}`}
                     onClick={() => handleMudarAbaCard(d.id, 'comentarios')}
                     role="tab"
                     aria-selected={abaCard === 'comentarios'}
+                    aria-controls={`panel-comentarios-${d.id}`}
                   >
                     Comentários ({comentarios.length})
                   </button>
                 </div>
 
                 {abaCard === 'detalhes' && (
-                  <div className="minhas-tarefas-card-painel" role="tabpanel">
+                  <div
+                    id={`panel-detalhes-${d.id}`}
+                    className="minhas-tarefas-card-painel"
+                    role="tabpanel"
+                    aria-labelledby={`tab-detalhes-${d.id}`}
+                  >
                     {d.descricao && (
                       <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
                     )}
@@ -342,7 +354,12 @@ export function MinhasDemandas({
                 )}
 
                 {abaCard === 'comentarios' && (
-                  <div className="minhas-tarefas-card-painel" role="tabpanel">
+                  <div
+                    id={`panel-comentarios-${d.id}`}
+                    className="minhas-tarefas-card-painel"
+                    role="tabpanel"
+                    aria-labelledby={`tab-comentarios-${d.id}`}
+                  >
                     {comentarios.length === 0 ? (
                       <p className="minhas-tarefas-card-sem-comentarios">
                         Nenhum comentário ainda. Adicione uma observação abaixo.

@@ -64,6 +64,7 @@ export function Agents({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               className="agents-input agents-input-busca"
+              aria-label="Buscar cidades"
             />
           </div>
           <button

@@ -55,7 +55,7 @@ export function Header({ usuarioAtual, onSair }: HeaderProps) {
           type="button"
           className="header-btn-icon"
           aria-label="Sair"
-          onClick={onSair}
+          onClick={() => onSair?.()}
         >
           <IconSair />
         </button>

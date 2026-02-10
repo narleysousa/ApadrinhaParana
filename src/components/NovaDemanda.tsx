@@ -60,6 +60,13 @@ export function NovaDemanda({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!titulo.trim() || !projetoId) return
+    const numCriancas = numeroCriancas.trim()
+      ? (() => {
+          const n = parseInt(numeroCriancas, 10)
+          return Number.isNaN(n) || n < 0 ? undefined : n
+        })()
+      : undefined
+
     onCriar({
       titulo: titulo.trim(),
       projetoId,
@@ -67,7 +74,7 @@ export function NovaDemanda({
       prioridade,
       descricao: descricao.trim(),
       agentId: agentId || undefined,
-      numeroCriancasAcolhidas: numeroCriancas ? parseInt(numeroCriancas, 10) : undefined,
+      numeroCriancasAcolhidas: numCriancas,
     })
     setTitulo('')
     setProjetoId('')
