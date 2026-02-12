@@ -21,6 +21,10 @@ vite.config.d.ts
 .env.local
 .env.*.local
 
+# Firebase (nunca commitar chave de conta de serviço)
+serviceAccountKey.json
+*-serviceAccountKey*.json
+
 # Logs
 *.log
 npm-debug.log*

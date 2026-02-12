@@ -346,6 +346,32 @@
   margin-bottom: 0.75rem;
 }
 
+.minhas-tarefas-card-detalhes-lista {
+  margin: 0 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.minhas-tarefas-card-detalhes-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.minhas-tarefas-card-detalhes-item dt {
+  margin: 0;
+  font-weight: 600;
+  color: var(--cor-texto-sec);
+  min-width: 10rem;
+}
+
+.minhas-tarefas-card-detalhes-item dd {
+  margin: 0;
+  color: var(--cor-texto);
+}
+
 .minhas-tarefas-card-responsaveis {
   display: flex;
   align-items: center;

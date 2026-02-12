@@ -339,6 +339,30 @@ export function MinhasDemandas({
                     role="tabpanel"
                     aria-labelledby={`tab-detalhes-${d.id}`}
                   >
+                    <dl className="minhas-tarefas-card-detalhes-lista">
+                      <div className="minhas-tarefas-card-detalhes-item">
+                        <dt>Projeto</dt>
+                        <dd>{d.projeto?.nome ?? '-'}</dd>
+                      </div>
+                      <div className="minhas-tarefas-card-detalhes-item">
+                        <dt>Cidade</dt>
+                        <dd>
+                          {d.agentId
+                            ? (agents.find((a) => a.id === d.agentId)?.nome ?? '-')
+                            : '-'}
+                        </dd>
+                      </div>
+                      <div className="minhas-tarefas-card-detalhes-item">
+                        <dt>Prioridade</dt>
+                        <dd>{d.prioridade}</dd>
+                      </div>
+                      {typeof d.numeroCriancasAcolhidas === 'number' && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Nº de crianças acolhidas</dt>
+                          <dd>{d.numeroCriancasAcolhidas}</dd>
+                        </div>
+                      )}
+                    </dl>
                     {d.descricao && (
                       <p className="minhas-tarefas-card-descricao">{d.descricao}</p>
                     )}
