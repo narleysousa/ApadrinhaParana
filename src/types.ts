@@ -50,3 +50,14 @@ export interface Demanda {
   numeroCriancasAcolhidas?: number
   comentarios?: ComentarioDemanda[]
 }
+
+/** Notificação in-app para o responsável (ex.: nova demanda atribuída) */
+export interface Notificacao {
+  id: string
+  userId: string
+  demandaId: string
+  tituloDemanda: string
+  prioridade: Prioridade
+  lida: boolean
+  criadaEm: string
+}

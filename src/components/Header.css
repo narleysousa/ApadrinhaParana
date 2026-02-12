@@ -96,3 +96,132 @@
   font-size: 0.9rem;
   color: var(--cor-texto);
 }
+
+/* Notificações */
+.header-notif-wrap {
+  position: relative;
+}
+
+.header-btn-notif {
+  position: relative;
+}
+
+.header-notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 4px;
+  border-radius: 10px;
+  background: var(--cor-alta, #dc2626);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-notif-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.35rem;
+  width: 320px;
+  max-height: 360px;
+  overflow: auto;
+  background: var(--cor-card, #fff);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  box-shadow: var(--sombra-card, 0 4px 12px rgba(0, 0, 0, 0.15));
+  z-index: 100;
+}
+
+.header-notif-dropdown-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--cor-borda);
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-notif-dropdown-count {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--cor-primaria);
+}
+
+.header-notif-vazio {
+  padding: 1.25rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--cor-texto-sec);
+  text-align: center;
+}
+
+.header-notif-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.header-notif-item {
+  margin: 0;
+}
+
+.header-notif-item-btn {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  display: block;
+  transition: background 0.15s;
+}
+
+.header-notif-item-btn:hover {
+  background: var(--cor-primaria-light, rgba(37, 99, 235, 0.08));
+}
+
+.header-notif-item-titulo {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+  margin-bottom: 0.2rem;
+}
+
+.header-notif-item-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--cor-texto-sec);
+  margin-bottom: 0.25rem;
+}
+
+.header-notif-item-prioridade {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.header-notif-item-prioridade.prioridade-alta {
+  background: var(--cor-alta, #dc2626);
+  color: white;
+}
+
+.header-notif-item-prioridade.prioridade-media {
+  background: #f59e0b;
+  color: white;
+}
+
+.header-notif-item-prioridade.prioridade-baixa {
+  background: var(--cor-baixa, #16a34a);
+  color: white;
+}

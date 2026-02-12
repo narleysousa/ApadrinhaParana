@@ -1,5 +1,5 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import type { Agent, Demanda, Projeto, Usuario } from '../types'
+import type { Agent, Demanda, Notificacao, Projeto, Usuario } from '../types'
 import { db, firebaseConfigurado } from './firebase'
 
 const COLECAO_APP = 'apadrinhaParana'
@@ -10,6 +10,7 @@ interface DadosNuvem {
   demandas?: unknown
   agents?: unknown
   usuarios?: unknown
+  notificacoes?: unknown
 }
 
 export interface SnapshotNuvem {
@@ -17,6 +18,7 @@ export interface SnapshotNuvem {
   demandas: Demanda[]
   agents: Agent[]
   usuarios: Usuario[]
+  notificacoes: Notificacao[]
 }
 
 function asArray<T>(valor: unknown): T[] {
@@ -55,6 +57,7 @@ export async function carregarDadosNuvem(): Promise<SnapshotNuvem> {
         demandas: [],
         agents: [],
         usuarios: [],
+        notificacoes: [],
       }
     }
 
@@ -64,6 +67,7 @@ export async function carregarDadosNuvem(): Promise<SnapshotNuvem> {
       demandas: asArray<Demanda>(data.demandas),
       agents: asArray<Agent>(data.agents),
       usuarios: asArray<Usuario>(data.usuarios),
+      notificacoes: asArray<Notificacao>(data.notificacoes),
     }
   } catch (error: unknown) {
     const mensagem = error instanceof Error ? error.message : String(error)
@@ -95,6 +99,7 @@ export async function salvarDadosNuvem(dados: SnapshotNuvem): Promise<ResultadoS
         demandas: limparUndefined(dados.demandas),
         agents: limparUndefined(dados.agents),
         usuarios: limparUndefined(dados.usuarios),
+        notificacoes: limparUndefined(dados.notificacoes),
         atualizadoEm: serverTimestamp(),
       },
       { merge: true }

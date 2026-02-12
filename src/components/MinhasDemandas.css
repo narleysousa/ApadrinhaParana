@@ -342,6 +342,27 @@
   font-weight: 600;
 }
 
+.minhas-tarefas-card-aba--novos {
+  border-color: var(--cor-alta, #dc2626);
+  color: var(--cor-alta, #dc2626);
+  background: rgba(220, 38, 38, 0.08);
+  font-weight: 600;
+}
+
+.minhas-tarefas-card-aba--novos.ativa {
+  background: rgba(220, 38, 38, 0.12);
+}
+
+.minhas-tarefas-card-aba--visto {
+  border-color: var(--cor-baixa, #16a34a);
+  color: var(--cor-baixa, #16a34a);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.minhas-tarefas-card-aba--visto.ativa {
+  background: rgba(22, 163, 74, 0.12);
+}
+
 .minhas-tarefas-card-painel {
   margin-bottom: 0.75rem;
 }

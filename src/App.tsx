@@ -5,7 +5,7 @@ import { LoadingScreen } from './components/LoadingScreen'
 import { NovaDemanda } from './components/NovaDemanda'
 import { MinhasDemandas } from './components/MinhasDemandas'
 import { Agents } from './components/Agents/Agents'
-import type { Demanda, Projeto, Prioridade, Agent, Responsavel, Usuario } from './types'
+import type { Demanda, Notificacao, Projeto, Prioridade, Agent, Responsavel, Usuario } from './types'
 import { gerarId, gerarIniciais } from './lib/utils'
 import {
   carregarDadosNuvem,
@@ -290,6 +290,33 @@ function normalizarDemandas(
   return demandasNormalizadas
 }
 
+function normalizarNotificacoes(lista: unknown): Notificacao[] {
+  const out: Notificacao[] = []
+  if (!Array.isArray(lista)) return out
+  for (const n of lista) {
+    if (!n || typeof n !== 'object') continue
+    const obj = n as Record<string, unknown>
+    const id = textoLimpo(obj.id)
+    const userId = textoLimpo(obj.userId)
+    const demandaId = textoLimpo(obj.demandaId)
+    const tituloDemanda = textoLimpo(obj.tituloDemanda)
+    const prioridade = prioridadeSegura(obj.prioridade)
+    const lida = Boolean(obj.lida)
+    const criadaEm = dataIsoSegura(obj.criadaEm)
+    if (!id || !userId || !demandaId) continue
+    out.push({
+      id,
+      userId,
+      demandaId,
+      tituloDemanda: tituloDemanda || 'Nova demanda',
+      prioridade,
+      lida,
+      criadaEm,
+    })
+  }
+  return out
+}
+
 function normalizarPath(pathname: string): string {
   const semBarraFinal = pathname.replace(/\/+$/, '')
   return semBarraFinal === '' ? '/' : semBarraFinal.toLowerCase()
@@ -365,6 +392,7 @@ function App() {
   const [demandas, setDemandas] = useState<Demanda[]>([])
   const [agents, setAgents] = useState<Agent[]>([])
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([])
 
   const [mensagemSucesso, setMensagemSucesso] = useState('')
   const [nuvemInicializada, setNuvemInicializada] = useState(false)
@@ -376,6 +404,13 @@ function App() {
       iniciais: u.iniciais,
     }))
   }, [usuarios])
+
+  const notificacoesNaoLidas = useMemo(() => {
+    if (!usuarioLogado) return []
+    return notificacoes.filter(
+      (n) => n.userId === usuarioLogado.id && !n.lida
+    )
+  }, [notificacoes, usuarioLogado])
 
   useEffect(() => {
     const handleOnline = () => {
@@ -437,6 +472,7 @@ function App() {
         setDemandas(demandasComProjetoReferenciado)
         setAgents(agentsNormalizados)
         setUsuarios(usuariosNormalizados)
+        setNotificacoes(normalizarNotificacoes(dadosNuvem.notificacoes))
 
         const usuarioSessaoId = lerUsuarioSessaoId()
         if (usuarioSessaoId) {
@@ -472,7 +508,7 @@ function App() {
     let ativo = true
     setStatusSync('sincronizando')
 
-    salvarDadosNuvem({ projetos, demandas, agents, usuarios })
+    salvarDadosNuvem({ projetos, demandas, agents, usuarios, notificacoes })
       .then((resultado) => {
         if (!ativo) return
         if (resultado.offline) {
@@ -492,7 +528,7 @@ function App() {
     return () => {
       ativo = false
     }
-  }, [projetos, demandas, agents, usuarios, nuvemInicializada, online])
+  }, [projetos, demandas, agents, usuarios, notificacoes, nuvemInicializada, online])
 
   useEffect(() => {
     const onRouteChange = () => {
@@ -571,7 +607,20 @@ function App() {
       }
 
       setDemandas((prev) => [nova, ...prev])
-      setMensagemSucesso('Demanda criada com sucesso.')
+
+      const criadaEm = new Date().toISOString()
+      const novasNotificacoes: Notificacao[] = nova.responsaveis.map((r) => ({
+        id: gerarId(),
+        userId: r.id,
+        demandaId: nova.id,
+        tituloDemanda: nova.titulo,
+        prioridade: nova.prioridade,
+        lida: false,
+        criadaEm,
+      }))
+      setNotificacoes((prev) => [...novasNotificacoes, ...prev])
+
+      setMensagemSucesso('Demanda criada com sucesso. Os responsáveis foram notificados.')
       setTimeout(() => setMensagemSucesso(''), 3000)
     },
     [projetos, usuarioLogado, usuarios]
@@ -623,6 +672,12 @@ function App() {
     },
     [agents]
   )
+
+  const handleMarcarNotificacaoLida = useCallback((id: string) => {
+    setNotificacoes((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, lida: true } : n))
+    )
+  }, [])
 
   const handleExcluir = useCallback((id: string) => {
     if (window.confirm('Excluir esta demanda?')) {
@@ -787,6 +842,7 @@ function App() {
         demandas,
         agents,
         usuarios: proximoUsuarios,
+        notificacoes,
       })
 
       if (!resultadoSync.sucesso) {
@@ -796,7 +852,7 @@ function App() {
       setUsuarios(proximoUsuarios)
       return { sucesso: true, usuario: novoUsuario }
     },
-    [usuarios, projetos, demandas, agents]
+    [usuarios, projetos, demandas, agents, notificacoes]
   )
 
   const handleEntrar = useCallback((usuario: Usuario) => {
@@ -842,7 +898,12 @@ function App() {
 
   return (
     <div className="app">
-      <Header usuarioAtual={usuarioLogado} onSair={handleSair} />
+      <Header
+        usuarioAtual={usuarioLogado}
+        onSair={handleSair}
+        notificacoesNaoLidas={notificacoesNaoLidas}
+        onMarcarNotificacaoLida={handleMarcarNotificacaoLida}
+      />
 
       {nuvemHabilitada && (
         <div className={`app-status app-status--${statusSync}`} role="status" aria-live="polite">

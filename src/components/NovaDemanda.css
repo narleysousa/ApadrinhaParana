@@ -84,8 +84,20 @@
 
 .nova-demanda-novo-projeto {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.5rem;
+  align-items: center;
+}
+
+.nova-demanda-novo-projeto .nova-demanda-input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.nova-demanda-novo-projeto-botoes {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .nova-demanda-btn-confirmar {
@@ -100,6 +112,21 @@
 
 .nova-demanda-btn-confirmar:hover {
   background: var(--cor-primaria-hover);
+}
+
+.nova-demanda-btn-cancelar {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--cor-texto-sec);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nova-demanda-btn-cancelar:hover {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
 }
 
 .nova-demanda-responsaveis {

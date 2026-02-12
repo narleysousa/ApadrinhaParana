@@ -5,8 +5,19 @@ import './MinhasDemandas.css'
 
 const DIAS_DEMANDA_ANTIGA = 14
 const DEBOUNCE_BUSCA_MS = 280
+const CHAVE_COMENTARIOS_VISTOS = 'apadrinha-comentarios-vistos'
 type AbaDemandas = 'andamento' | 'finalizadas'
 type AbaCard = 'detalhes' | 'comentarios'
+
+function getChaveComentariosVistos(usuarioId: string, demandaId: string): string {
+  return `${CHAVE_COMENTARIOS_VISTOS}-${usuarioId}-${demandaId}`
+}
+
+function getLatestCommentTime(demanda: Demanda): string {
+  const comentarios = Array.isArray(demanda.comentarios) ? demanda.comentarios : []
+  if (comentarios.length === 0) return ''
+  return comentarios.reduce((max, c) => (c.criadoEm > max ? c.criadoEm : max), comentarios[0].criadoEm)
+}
 
 interface MinhasDemandasProps {
   demandas: Demanda[]
@@ -36,6 +47,25 @@ export function MinhasDemandas({
   const [abaDemandas, setAbaDemandas] = useState<AbaDemandas>('andamento')
   const [abasCard, setAbasCard] = useState<Record<string, AbaCard>>({})
   const [comentariosInput, setComentariosInput] = useState<Record<string, string>>({})
+  const [comentariosVistosEm, setComentariosVistosEm] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    try {
+      const prefix = `${CHAVE_COMENTARIOS_VISTOS}-${usuarioAtualId}-`
+      const visto: Record<string, string> = {}
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith(prefix)) {
+          const demandaId = key.slice(prefix.length)
+          const val = localStorage.getItem(key)
+          if (val) visto[demandaId] = val
+        }
+      }
+      setComentariosVistosEm(visto)
+    } catch {
+      // ignorar localStorage indisponível
+    }
+  }, [usuarioAtualId])
 
   useEffect(() => {
     const t = setTimeout(() => setBusca(buscaInput), DEBOUNCE_BUSCA_MS)
@@ -114,8 +144,33 @@ export function MinhasDemandas({
     [demandas]
   )
 
-  const handleMudarAbaCard = (demandaId: string, aba: AbaCard) => {
+  const marcarComentariosVistos = (demandaId: string, ultimoComentarioEm: string) => {
+    if (!ultimoComentarioEm) return
+    setComentariosVistosEm((prev) => ({ ...prev, [demandaId]: ultimoComentarioEm }))
+    try {
+      localStorage.setItem(
+        getChaveComentariosVistos(usuarioAtualId, demandaId),
+        ultimoComentarioEm
+      )
+    } catch {
+      // ignorar
+    }
+  }
+
+  const handleMudarAbaCard = (demandaId: string, aba: AbaCard, demanda?: Demanda) => {
     setAbasCard((prev) => ({ ...prev, [demandaId]: aba }))
+    if (aba === 'comentarios' && demanda) {
+      const latest = getLatestCommentTime(demanda)
+      if (latest) marcarComentariosVistos(demandaId, latest)
+    }
+  }
+
+  const temComentariosNaoVistos = (demanda: Demanda): boolean => {
+    const comentarios = Array.isArray(demanda.comentarios) ? demanda.comentarios : []
+    if (comentarios.length === 0) return false
+    const latest = getLatestCommentTime(demanda)
+    const vistoEm = comentariosVistosEm[demanda.id]
+    return !vistoEm || latest > vistoEm
   }
 
   const handleComentarioChange = (demandaId: string, texto: string) => {
@@ -322,11 +377,12 @@ export function MinhasDemandas({
                   <button
                     type="button"
                     id={`tab-comentarios-${d.id}`}
-                    className={`minhas-tarefas-card-aba ${abaCard === 'comentarios' ? 'ativa' : ''}`}
-                    onClick={() => handleMudarAbaCard(d.id, 'comentarios')}
+                    className={`minhas-tarefas-card-aba ${abaCard === 'comentarios' ? 'ativa' : ''} ${comentarios.length > 0 ? (temComentariosNaoVistos(d) ? 'minhas-tarefas-card-aba--novos' : 'minhas-tarefas-card-aba--visto') : ''}`}
+                    onClick={() => handleMudarAbaCard(d.id, 'comentarios', d)}
                     role="tab"
                     aria-selected={abaCard === 'comentarios'}
                     aria-controls={`panel-comentarios-${d.id}`}
+                    title={temComentariosNaoVistos(d) ? 'Novos comentários não visualizados' : undefined}
                   >
                     Comentários ({comentarios.length})
                   </button>

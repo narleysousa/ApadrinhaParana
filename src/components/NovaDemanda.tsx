@@ -159,13 +159,25 @@ export function NovaDemanda({
                 aria-label="Nome do novo projeto"
                 onKeyDown={(e) => e.key === 'Escape' && setMostrarNovoProjeto(false)}
               />
-              <button
-                type="button"
-                className="nova-demanda-btn-confirmar"
-                onClick={handleAdicionarProjeto}
-              >
-                Adicionar
-              </button>
+              <div className="nova-demanda-novo-projeto-botoes">
+                <button
+                  type="button"
+                  className="nova-demanda-btn-confirmar"
+                  onClick={handleAdicionarProjeto}
+                >
+                  Adicionar
+                </button>
+                <button
+                  type="button"
+                  className="nova-demanda-btn-cancelar"
+                  onClick={() => {
+                    setNovoProjetoNome('')
+                    setMostrarNovoProjeto(false)
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           )}
         </label>
@@ -223,13 +235,25 @@ export function NovaDemanda({
                 aria-label="Nome da nova cidade"
                 onKeyDown={(e) => e.key === 'Escape' && setMostrarNovaCidade(false)}
               />
-              <button
-                type="button"
-                className="nova-demanda-btn-confirmar"
-                onClick={handleAdicionarCidade}
-              >
-                Adicionar
-              </button>
+              <div className="nova-demanda-novo-projeto-botoes">
+                <button
+                  type="button"
+                  className="nova-demanda-btn-confirmar"
+                  onClick={handleAdicionarCidade}
+                >
+                  Adicionar
+                </button>
+                <button
+                  type="button"
+                  className="nova-demanda-btn-cancelar"
+                  onClick={() => {
+                    setNovaCidadeNome('')
+                    setMostrarNovaCidade(false)
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           )}
         </label>

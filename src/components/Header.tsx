@@ -1,9 +1,13 @@
-import type { Responsavel } from '../types'
+import { useState, useRef, useEffect } from 'react'
+import type { Notificacao, Responsavel } from '../types'
+import { formatarData } from '../lib/utils'
 import './Header.css'
 
 interface HeaderProps {
   usuarioAtual: Responsavel
   onSair?: () => void
+  notificacoesNaoLidas?: Notificacao[]
+  onMarcarNotificacaoLida?: (id: string) => void
 }
 
 function IconLogo() {
@@ -33,7 +37,29 @@ function IconSair() {
   )
 }
 
-export function Header({ usuarioAtual, onSair }: HeaderProps) {
+export function Header({
+  usuarioAtual,
+  onSair,
+  notificacoesNaoLidas = [],
+  onMarcarNotificacaoLida,
+}: HeaderProps) {
+  const [dropdownAberto, setDropdownAberto] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickFora(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownAberto(false)
+      }
+    }
+    if (dropdownAberto) {
+      document.addEventListener('click', handleClickFora)
+      return () => document.removeEventListener('click', handleClickFora)
+    }
+  }, [dropdownAberto])
+
+  const totalNaoLidas = notificacoesNaoLidas.length
+
   return (
     <header className="header">
       <div className="header-logo">
@@ -44,9 +70,58 @@ export function Header({ usuarioAtual, onSair }: HeaderProps) {
         <span className="header-subtitulo">Gestão de Demandas</span>
       </div>
       <div className="header-acoes">
-        <button type="button" className="header-btn-icon" aria-label="Notificações">
-          <IconNotificacoes />
-        </button>
+        <div className="header-notif-wrap" ref={dropdownRef}>
+          <button
+            type="button"
+            className="header-btn-icon header-btn-notif"
+            aria-label={totalNaoLidas > 0 ? `${totalNaoLidas} notificação(ões)` : 'Notificações'}
+            aria-expanded={dropdownAberto}
+            onClick={() => setDropdownAberto((v) => !v)}
+          >
+            <IconNotificacoes />
+            {totalNaoLidas > 0 && (
+              <span className="header-notif-badge" aria-hidden>
+                {totalNaoLidas > 99 ? '99+' : totalNaoLidas}
+              </span>
+            )}
+          </button>
+          {dropdownAberto && (
+            <div className="header-notif-dropdown" role="dialog" aria-label="Notificações">
+              <div className="header-notif-dropdown-header">
+                <span>Notificações</span>
+                {totalNaoLidas > 0 && (
+                  <span className="header-notif-dropdown-count">{totalNaoLidas} nova(s)</span>
+                )}
+              </div>
+              {notificacoesNaoLidas.length === 0 ? (
+                <p className="header-notif-vazio">Nenhuma notificação nova.</p>
+              ) : (
+                <ul className="header-notif-lista">
+                  {notificacoesNaoLidas.map((n) => (
+                    <li key={n.id} className="header-notif-item">
+                      <button
+                        type="button"
+                        className="header-notif-item-btn"
+                        onClick={() => {
+                          onMarcarNotificacaoLida?.(n.id)
+                          setDropdownAberto(false)
+                        }}
+                      >
+                        <span className="header-notif-item-titulo">{n.tituloDemanda}</span>
+                        <span className="header-notif-item-meta">
+                          Nova demanda atribuída a você · {formatarData(n.criadaEm)}
+                        </span>
+                        <span className={`header-notif-item-prioridade prioridade-${n.prioridade === 'ALTA' ? 'alta' : n.prioridade === 'MÉDIA' ? 'media' : 'baixa'}`}>
+                          {n.prioridade}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
         <div className="header-usuario">
           <span className="header-avatar" aria-hidden>{usuarioAtual.iniciais}</span>
           <span className="header-nome">{usuarioAtual.nome}</span>
