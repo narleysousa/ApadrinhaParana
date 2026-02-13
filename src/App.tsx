@@ -183,10 +183,11 @@ function normalizarComentarios(
     const autor = normalizarResponsavel(entrada.autor, usuariosPorId)
     if (!texto || !autor) continue
 
+    const criadoEmRaw = entrada.criadoEm ?? (entrada as Record<string, unknown>).criadaEm
     comentariosNormalizados.push({
       id: textoLimpo(entrada.id) || gerarId(),
       texto,
-      criadoEm: dataIsoSegura(entrada.criadoEm),
+      criadoEm: dataIsoSegura(criadoEmRaw),
       autor,
     })
   }

@@ -82,10 +82,13 @@ export function MinhasDemandas({
 
   const demandasBaseFiltradas = useMemo(() => {
     return demandas.filter((d) => {
+      const titulo = (d.titulo ?? '').toLowerCase()
+      const descricao = (d.descricao ?? '').toLowerCase()
+      const termoBusca = busca.toLowerCase()
       const matchBusca =
         !busca ||
-        d.titulo.toLowerCase().includes(busca.toLowerCase()) ||
-        d.descricao.toLowerCase().includes(busca.toLowerCase())
+        titulo.includes(termoBusca) ||
+        descricao.includes(termoBusca)
       const matchProjeto =
         filtroProjeto === 'todos' || d.projeto.id === filtroProjeto
       const responsaveisDemanda = getResponsaveisDemanda(d)
