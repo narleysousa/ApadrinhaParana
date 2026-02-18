@@ -339,6 +339,15 @@
   cursor: not-allowed;
 }
 
+.login-direitos {
+  display: block;
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--cor-texto-sec);
+}
+
 .login-btn-loader {
   width: 20px;
   height: 20px;

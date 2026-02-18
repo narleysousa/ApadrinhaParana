@@ -240,6 +240,9 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
               >
                 {carregando ? <span className="login-btn-loader" /> : 'Entrar'}
               </button>
+              <small className="login-direitos">
+                © {new Date().getFullYear()} Narley Almeida Consulting. Todos os direitos reservados.
+              </small>
             </form>
           )}
 
@@ -342,6 +345,9 @@ export function Login({ onEntrar, onAutenticar, onCadastrar }: LoginProps) {
               >
                 {carregando ? <span className="login-btn-loader" /> : 'Criar Conta'}
               </button>
+              <small className="login-direitos">
+                © {new Date().getFullYear()} Narley Almeida Consulting. Todos os direitos reservados.
+              </small>
             </form>
           )}
         </div>
