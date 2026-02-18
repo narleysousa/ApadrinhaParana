@@ -980,6 +980,11 @@ function App() {
           />
         </main>
       )}
+      <footer className="app-footer">
+        <small>
+          © {new Date().getFullYear()} Apadrinha Paraná. Todos os direitos reservados.
+        </small>
+      </footer>
     </div>
   )
 }

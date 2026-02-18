@@ -153,6 +153,16 @@
   overflow: auto;
 }
 
+.app-footer {
+  margin-top: auto;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--cor-borda);
+  background: var(--cor-card);
+  color: var(--cor-texto-sec);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 900px) {
   .app-main {
     grid-template-columns: 1fr;
