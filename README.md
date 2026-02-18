@@ -4,30 +4,43 @@ App web para criar e gerenciar demandas/tarefas, com formulário de nova demanda
 
 **Site (GitHub Pages):** **[https://narleysousa.github.io/ApadrinhaParana/](https://narleysousa.github.io/ApadrinhaParana/)**
 
-> Use sempre o link acima. O endereço `narleysousa.github.io` (sem `/ApadrinhaParana/`) só funciona se você configurar o redirect (veja abaixo).
+> Use sempre o link completo com o nome do repositório. O endereço `usuario.github.io` (sem `/NomeDoRepo/`) só funciona se você configurar o redirect (veja abaixo).
 
-## Deploy no GitHub Pages
+## Rodando no GitHub (CI e Pages)
 
-1. No repositório **ApadrinhaParana**, vá em **Settings** → **Pages**.
+### Configuração inicial (uma vez)
+
+1. No repositório, vá em **Settings** → **Pages**.
 2. Em **Build and deployment** → **Source**, escolha **GitHub Actions** (não use "Deploy from a branch").
-3. A cada push na branch `main`, o workflow **Deploy to GitHub Pages** faz o build e publica o site.
-4. Se o deploy falhar, abra a aba **Actions**, clique na execução com erro e confira a mensagem.
-5. Para repositório de projeto, abra com `/NOME_DO_REPO/` no final da URL (ex.: `/ApadrinhaParana/`).
-6. Em **Settings → Actions → General**, deixe **Workflow permissions** em **Read and write permissions**.
+3. Em **Settings** → **Actions** → **General** → **Workflow permissions**, marque **Read and write permissions** e salve.
+
+### O que acontece a cada push
+
+- **Push ou PR na `main`**: o workflow **CI** roda typecheck e build (garante que o código compila).
+- **Push na `main`**: o workflow **Deploy to GitHub Pages** faz o build e publica o site.
+
+O **base path** (caminho do app na URL) é definido automaticamente pelo nome do repositório. Exemplos:
+
+- Repo `ApadrinhaParana` → site em `https://SEU_USUARIO.github.io/ApadrinhaParana/`
+- Repo `Demandas - Apadrinha paraná` → site em `https://SEU_USUARIO.github.io/Demandas---Apadrinha-paraná/` (espaços viram hífens na URL)
+
+Se o deploy falhar, abra a aba **Actions**, clique na execução com erro e confira o log.
 
 ### Checklist rápido de erro 404
 
-- Se você abrir `https://narleysousa.github.io/` e receber 404, isso é esperado sem um repositório `narleysousa.github.io`.
-- O app deste repo publica em `https://narleysousa.github.io/ApadrinhaParana/`.
-- O build usa caminhos relativos, compatível com GitHub Pages em subpasta.
-- Se o Pages estiver configurado para servir a branch em vez do artifact do Actions, a raiz redireciona para `dist/`.
+- Abrir `https://usuario.github.io/` (sem nome do repo) dá 404 — é esperado.
+- O app fica em `https://usuario.github.io/NOME_DO_REPO/` (com barra no final).
+- O projeto usa um **404.html** que redireciona links quebrados para a raiz do app.
+- Se você renomear o repositório, o próximo deploy já usa o novo nome na URL.
 
-**Site na raiz (narleysousa.github.io):**  
-Se quiser que `narleysousa.github.io` redirecione para o app:
-- Crie um repositório **narleysousa/narleysousa.github.io**.
-- Copie o conteúdo de `docs/user-site-index.html` para um arquivo `index.html` na raiz desse repositório.
+### Site na raiz (usuario.github.io)
+
+Se quiser que `usuario.github.io` redirecione para este app:
+
+- Crie um repositório **usuario/usuario.github.io**.
+- Copie o conteúdo de `docs/user-site-index.html` para um arquivo `index.html` na raiz desse repositório (e ajuste a URL dentro do arquivo para o seu repo).
 - Em **Settings** → **Pages** desse repo, use **Deploy from a branch**, branch `main`, pasta `/ (root)`.
-- Assim, ao acessar `narleysousa.github.io`, o navegador será redirecionado para o app.
+- Ao acessar `usuario.github.io`, o navegador será redirecionado para o app.
 
 ## Funcionalidades
 

@@ -25,8 +25,16 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "npm"
+
+      - name: Base path para GitHub Pages
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          # GitHub Pages: espaços no nome do repo viram hífens na URL
+          SLUG=$(echo "$REPO" | tr ' ' '-')
+          echo "VITE_BASE_PATH=/${SLUG}/" >> $GITHUB_ENV
+          echo "Base path: /${SLUG}/"
 
       - name: Install
         run: npm ci
