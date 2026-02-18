@@ -982,7 +982,7 @@ function App() {
       )}
       <footer className="app-footer">
         <small>
-          © {new Date().getFullYear()} Narley Almeida consultancy. Todos os direitos reservados.
+          © {new Date().getFullYear()} Narley Almeida Consulting. Todos os direitos reservados.
         </small>
       </footer>
     </div>
