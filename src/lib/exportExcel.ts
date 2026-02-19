@@ -6,6 +6,18 @@ interface DemandaExcel {
     'Projeto': string
     'Cidade': string
     'Responsáveis': string
+    'Total de Crianças e Adolescentes': string
+    'Instituição': string
+    'Tipo de Acolhimento': string
+    'Capacidade de Acolhimento': string
+    'Respondente da Pesquisa': string
+    'Serviços Desejados': string
+    'Responsável Técnico': string
+    'Resp. Técnico Telefone': string
+    'Resp. Técnico Email': string
+    'Representante de Divulgação': string
+    'Rep. Divulgação Telefone': string
+    'Rep. Divulgação Email': string
     'Prioridade': string
     'Descrição': string
     'Progresso (%)': number
@@ -25,6 +37,24 @@ function formatarDemandaParaExcel(demanda: Demanda, agents: Agent[]): DemandaExc
         'Projeto': demanda.projeto?.nome ?? '-',
         'Cidade': cidade,
         'Responsáveis': responsaveis,
+        'Total de Crianças e Adolescentes': typeof demanda.numeroTotalCriancasAdolescentes === 'number'
+            ? String(demanda.numeroTotalCriancasAdolescentes)
+            : '-',
+        'Instituição': demanda.nomeInstituicao || '-',
+        'Tipo de Acolhimento': (Array.isArray(demanda.tiposAcolhimento) && demanda.tiposAcolhimento.length > 0)
+            ? demanda.tiposAcolhimento.join(', ')
+            : '-',
+        'Capacidade de Acolhimento': typeof demanda.capacidadeAcolhimento === 'number'
+            ? String(demanda.capacidadeAcolhimento)
+            : '-',
+        'Respondente da Pesquisa': demanda.nomeRespondentePesquisa || '-',
+        'Serviços Desejados': demanda.servicosDesejados || '-',
+        'Responsável Técnico': demanda.responsavelTecnicoNome || '-',
+        'Resp. Técnico Telefone': demanda.responsavelTecnicoTelefone || '-',
+        'Resp. Técnico Email': demanda.responsavelTecnicoEmail || '-',
+        'Representante de Divulgação': demanda.representanteDivulgacaoNome || '-',
+        'Rep. Divulgação Telefone': demanda.representanteDivulgacaoTelefone || '-',
+        'Rep. Divulgação Email': demanda.representanteDivulgacaoEmail || '-',
         'Prioridade': demanda.prioridade,
         'Descrição': demanda.descricao || '-',
         'Progresso (%)': demanda.progresso ?? 0,
@@ -56,6 +86,18 @@ export async function exportarDemandasExcel(
         { wch: 25 }, // Projeto
         { wch: 20 }, // Cidade
         { wch: 30 }, // Responsáveis
+        { wch: 28 }, // Total de crianças e adolescentes
+        { wch: 30 }, // Instituição
+        { wch: 30 }, // Tipo de acolhimento
+        { wch: 24 }, // Capacidade de acolhimento
+        { wch: 26 }, // Respondente
+        { wch: 36 }, // Serviços desejados
+        { wch: 26 }, // Responsável técnico
+        { wch: 22 }, // Resp. técnico telefone
+        { wch: 30 }, // Resp. técnico email
+        { wch: 30 }, // Representante divulgação
+        { wch: 22 }, // Rep. divulgação telefone
+        { wch: 30 }, // Rep. divulgação email
         { wch: 12 }, // Prioridade
         { wch: 50 }, // Descrição
         { wch: 14 }, // Progresso

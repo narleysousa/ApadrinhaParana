@@ -263,6 +263,44 @@ function normalizarDemandas(
         ? Math.floor(numeroCriancasNumero)
         : undefined
 
+    const numeroTotalCriancasAdolescentesNumero =
+      typeof entrada.numeroTotalCriancasAdolescentes === 'number'
+        ? entrada.numeroTotalCriancasAdolescentes
+        : Number(entrada.numeroTotalCriancasAdolescentes)
+    const numeroTotalCriancasAdolescentes =
+      Number.isFinite(numeroTotalCriancasAdolescentesNumero) && numeroTotalCriancasAdolescentesNumero >= 0
+        ? Math.floor(numeroTotalCriancasAdolescentesNumero)
+        : undefined
+
+    const capacidadeAcolhimentoNumero =
+      typeof entrada.capacidadeAcolhimento === 'number'
+        ? entrada.capacidadeAcolhimento
+        : Number(entrada.capacidadeAcolhimento)
+    const capacidadeAcolhimento =
+      Number.isFinite(capacidadeAcolhimentoNumero) && capacidadeAcolhimentoNumero >= 0
+        ? Math.floor(capacidadeAcolhimentoNumero)
+        : undefined
+
+    const nomeInstituicao = textoLimpo(entrada.nomeInstituicao)
+    const tiposAcolhimentoEntrada = Array.isArray(entrada.tiposAcolhimento)
+      ? entrada.tiposAcolhimento
+      : []
+    const tiposAcolhimento = Array.from(
+      new Set(
+        tiposAcolhimentoEntrada
+          .map((tipo) => textoLimpo(tipo))
+          .filter((tipo) => Boolean(tipo))
+      )
+    )
+    const nomeRespondentePesquisa = textoLimpo(entrada.nomeRespondentePesquisa)
+    const servicosDesejados = textoLimpo(entrada.servicosDesejados)
+    const responsavelTecnicoNome = textoLimpo(entrada.responsavelTecnicoNome)
+    const responsavelTecnicoTelefone = textoLimpo(entrada.responsavelTecnicoTelefone)
+    const responsavelTecnicoEmail = textoLimpo(entrada.responsavelTecnicoEmail)
+    const representanteDivulgacaoNome = textoLimpo(entrada.representanteDivulgacaoNome)
+    const representanteDivulgacaoTelefone = textoLimpo(entrada.representanteDivulgacaoTelefone)
+    const representanteDivulgacaoEmail = textoLimpo(entrada.representanteDivulgacaoEmail)
+
     const agentId = textoLimpo(entrada.agentId)
     const demanda: Demanda = {
       id,
@@ -283,6 +321,42 @@ function normalizarDemandas(
 
     if (typeof numeroCriancasAcolhidas === 'number') {
       demanda.numeroCriancasAcolhidas = numeroCriancasAcolhidas
+    }
+    if (typeof numeroTotalCriancasAdolescentes === 'number') {
+      demanda.numeroTotalCriancasAdolescentes = numeroTotalCriancasAdolescentes
+    }
+    if (typeof capacidadeAcolhimento === 'number') {
+      demanda.capacidadeAcolhimento = capacidadeAcolhimento
+    }
+    if (nomeInstituicao) {
+      demanda.nomeInstituicao = nomeInstituicao
+    }
+    if (tiposAcolhimento.length > 0) {
+      demanda.tiposAcolhimento = tiposAcolhimento
+    }
+    if (nomeRespondentePesquisa) {
+      demanda.nomeRespondentePesquisa = nomeRespondentePesquisa
+    }
+    if (servicosDesejados) {
+      demanda.servicosDesejados = servicosDesejados
+    }
+    if (responsavelTecnicoNome) {
+      demanda.responsavelTecnicoNome = responsavelTecnicoNome
+    }
+    if (responsavelTecnicoTelefone) {
+      demanda.responsavelTecnicoTelefone = responsavelTecnicoTelefone
+    }
+    if (responsavelTecnicoEmail) {
+      demanda.responsavelTecnicoEmail = responsavelTecnicoEmail
+    }
+    if (representanteDivulgacaoNome) {
+      demanda.representanteDivulgacaoNome = representanteDivulgacaoNome
+    }
+    if (representanteDivulgacaoTelefone) {
+      demanda.representanteDivulgacaoTelefone = representanteDivulgacaoTelefone
+    }
+    if (representanteDivulgacaoEmail) {
+      demanda.representanteDivulgacaoEmail = representanteDivulgacaoEmail
     }
 
     demandasNormalizadas.push(demanda)
@@ -576,6 +650,18 @@ function App() {
       descricao: string
       agentId?: string
       numeroCriancasAcolhidas?: number
+      numeroTotalCriancasAdolescentes?: number
+      capacidadeAcolhimento?: number
+      nomeInstituicao?: string
+      tiposAcolhimento?: string[]
+      nomeRespondentePesquisa?: string
+      servicosDesejados?: string
+      responsavelTecnicoNome?: string
+      responsavelTecnicoTelefone?: string
+      responsavelTecnicoEmail?: string
+      representanteDivulgacaoNome?: string
+      representanteDivulgacaoTelefone?: string
+      representanteDivulgacaoEmail?: string
     }) => {
       const projeto = projetos.find((p) => p.id === dados.projetoId)
       if (!projeto || !usuarioLogado) return
@@ -604,6 +690,42 @@ function App() {
         ...(dados.agentId ? { agentId: dados.agentId } : {}),
         ...(typeof dados.numeroCriancasAcolhidas === 'number'
           ? { numeroCriancasAcolhidas: dados.numeroCriancasAcolhidas }
+          : {}),
+        ...(typeof dados.numeroTotalCriancasAdolescentes === 'number'
+          ? { numeroTotalCriancasAdolescentes: dados.numeroTotalCriancasAdolescentes }
+          : {}),
+        ...(typeof dados.capacidadeAcolhimento === 'number'
+          ? { capacidadeAcolhimento: dados.capacidadeAcolhimento }
+          : {}),
+        ...(dados.nomeInstituicao
+          ? { nomeInstituicao: dados.nomeInstituicao }
+          : {}),
+        ...(Array.isArray(dados.tiposAcolhimento) && dados.tiposAcolhimento.length > 0
+          ? { tiposAcolhimento: dados.tiposAcolhimento }
+          : {}),
+        ...(dados.nomeRespondentePesquisa
+          ? { nomeRespondentePesquisa: dados.nomeRespondentePesquisa }
+          : {}),
+        ...(dados.servicosDesejados
+          ? { servicosDesejados: dados.servicosDesejados }
+          : {}),
+        ...(dados.responsavelTecnicoNome
+          ? { responsavelTecnicoNome: dados.responsavelTecnicoNome }
+          : {}),
+        ...(dados.responsavelTecnicoTelefone
+          ? { responsavelTecnicoTelefone: dados.responsavelTecnicoTelefone }
+          : {}),
+        ...(dados.responsavelTecnicoEmail
+          ? { responsavelTecnicoEmail: dados.responsavelTecnicoEmail }
+          : {}),
+        ...(dados.representanteDivulgacaoNome
+          ? { representanteDivulgacaoNome: dados.representanteDivulgacaoNome }
+          : {}),
+        ...(dados.representanteDivulgacaoTelefone
+          ? { representanteDivulgacaoTelefone: dados.representanteDivulgacaoTelefone }
+          : {}),
+        ...(dados.representanteDivulgacaoEmail
+          ? { representanteDivulgacaoEmail: dados.representanteDivulgacaoEmail }
           : {}),
       }
 

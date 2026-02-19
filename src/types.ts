@@ -48,6 +48,18 @@ export interface Demanda {
   finalizada?: boolean
   agentId?: string
   numeroCriancasAcolhidas?: number
+  numeroTotalCriancasAdolescentes?: number
+  capacidadeAcolhimento?: number
+  nomeInstituicao?: string
+  tiposAcolhimento?: string[]
+  nomeRespondentePesquisa?: string
+  servicosDesejados?: string
+  responsavelTecnicoNome?: string
+  responsavelTecnicoTelefone?: string
+  responsavelTecnicoEmail?: string
+  representanteDivulgacaoNome?: string
+  representanteDivulgacaoTelefone?: string
+  representanteDivulgacaoEmail?: string
   comentarios?: ComentarioDemanda[]
 }
 

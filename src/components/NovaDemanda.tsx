@@ -3,6 +3,7 @@ import type { Prioridade, Projeto, Responsavel, Agent } from '../types'
 import './NovaDemanda.css'
 
 const PRIORIDADES: Prioridade[] = ['ALTA', 'MÉDIA', 'BAIXA']
+const TIPOS_ACOLHIMENTO = ['Abrigo', 'Casa Lar', 'Família acolhedora'] as const
 
 interface NovaDemandaProps {
   projetos: Projeto[]
@@ -16,6 +17,18 @@ interface NovaDemandaProps {
     descricao: string
     agentId?: string
     numeroCriancasAcolhidas?: number
+    numeroTotalCriancasAdolescentes?: number
+    capacidadeAcolhimento?: number
+    nomeInstituicao?: string
+    tiposAcolhimento?: string[]
+    nomeRespondentePesquisa?: string
+    servicosDesejados?: string
+    responsavelTecnicoNome?: string
+    responsavelTecnicoTelefone?: string
+    responsavelTecnicoEmail?: string
+    representanteDivulgacaoNome?: string
+    representanteDivulgacaoTelefone?: string
+    representanteDivulgacaoEmail?: string
   }) => void
   onAdicionarProjeto?: (nome: string) => string | void
   onAdicionarCidade?: (nome: string) => string | void
@@ -36,6 +49,18 @@ export function NovaDemanda({
   const [descricao, setDescricao] = useState('')
   const [agentId, setAgentId] = useState('')
   const [numeroCriancas, setNumeroCriancas] = useState('')
+  const [numeroTotalCriancasAdolescentes, setNumeroTotalCriancasAdolescentes] = useState('')
+  const [capacidadeAcolhimento, setCapacidadeAcolhimento] = useState('')
+  const [nomeInstituicao, setNomeInstituicao] = useState('')
+  const [tiposAcolhimento, setTiposAcolhimento] = useState<string[]>([])
+  const [nomeRespondentePesquisa, setNomeRespondentePesquisa] = useState('')
+  const [servicosDesejados, setServicosDesejados] = useState('')
+  const [responsavelTecnicoNome, setResponsavelTecnicoNome] = useState('')
+  const [responsavelTecnicoTelefone, setResponsavelTecnicoTelefone] = useState('')
+  const [responsavelTecnicoEmail, setResponsavelTecnicoEmail] = useState('')
+  const [representanteDivulgacaoNome, setRepresentanteDivulgacaoNome] = useState('')
+  const [representanteDivulgacaoTelefone, setRepresentanteDivulgacaoTelefone] = useState('')
+  const [representanteDivulgacaoEmail, setRepresentanteDivulgacaoEmail] = useState('')
   const [novoProjetoNome, setNovoProjetoNome] = useState('')
   const [mostrarNovoProjeto, setMostrarNovoProjeto] = useState(false)
   const [novaCidadeNome, setNovaCidadeNome] = useState('')
@@ -51,18 +76,49 @@ export function NovaDemanda({
     if (mostrarNovaCidade) inputNovaCidadeRef.current?.focus()
   }, [mostrarNovaCidade])
 
+  useEffect(() => {
+    if (!nomeInstituicao.trim() && tiposAcolhimento.length > 0) {
+      setTiposAcolhimento([])
+    }
+    if (!nomeInstituicao.trim() && capacidadeAcolhimento.length > 0) {
+      setCapacidadeAcolhimento('')
+    }
+  }, [nomeInstituicao, tiposAcolhimento.length, capacidadeAcolhimento.length])
+
   const toggleResponsavel = (id: string) => {
     setResponsaveisIds((prev) =>
       prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
     )
   }
 
+  const toggleTipoAcolhimento = (tipo: string) => {
+    setTiposAcolhimento((prev) =>
+      prev.includes(tipo) ? prev.filter((t) => t !== tipo) : [...prev, tipo]
+    )
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!titulo.trim() || !projetoId) return
+    const textoOpcional = (valor: string) => {
+      const texto = valor.trim()
+      return texto || undefined
+    }
     const numCriancas = numeroCriancas.trim()
       ? (() => {
           const n = parseInt(numeroCriancas, 10)
+          return Number.isNaN(n) || n < 0 ? undefined : n
+        })()
+      : undefined
+    const totalCriancasAdolescentes = numeroTotalCriancasAdolescentes.trim()
+      ? (() => {
+          const n = parseInt(numeroTotalCriancasAdolescentes, 10)
+          return Number.isNaN(n) || n < 0 ? undefined : n
+        })()
+      : undefined
+    const capacidade = capacidadeAcolhimento.trim()
+      ? (() => {
+          const n = parseInt(capacidadeAcolhimento, 10)
           return Number.isNaN(n) || n < 0 ? undefined : n
         })()
       : undefined
@@ -75,12 +131,36 @@ export function NovaDemanda({
       descricao: descricao.trim(),
       agentId: agentId || undefined,
       numeroCriancasAcolhidas: numCriancas,
+      numeroTotalCriancasAdolescentes: totalCriancasAdolescentes,
+      capacidadeAcolhimento: capacidade,
+      nomeInstituicao: textoOpcional(nomeInstituicao),
+      tiposAcolhimento: nomeInstituicao.trim() ? tiposAcolhimento : undefined,
+      nomeRespondentePesquisa: textoOpcional(nomeRespondentePesquisa),
+      servicosDesejados: textoOpcional(servicosDesejados),
+      responsavelTecnicoNome: textoOpcional(responsavelTecnicoNome),
+      responsavelTecnicoTelefone: textoOpcional(responsavelTecnicoTelefone),
+      responsavelTecnicoEmail: textoOpcional(responsavelTecnicoEmail),
+      representanteDivulgacaoNome: textoOpcional(representanteDivulgacaoNome),
+      representanteDivulgacaoTelefone: textoOpcional(representanteDivulgacaoTelefone),
+      representanteDivulgacaoEmail: textoOpcional(representanteDivulgacaoEmail),
     })
     setTitulo('')
     setProjetoId('')
     setDescricao('')
     setAgentId('')
     setNumeroCriancas('')
+    setNumeroTotalCriancasAdolescentes('')
+    setCapacidadeAcolhimento('')
+    setNomeInstituicao('')
+    setTiposAcolhimento([])
+    setNomeRespondentePesquisa('')
+    setServicosDesejados('')
+    setResponsavelTecnicoNome('')
+    setResponsavelTecnicoTelefone('')
+    setResponsavelTecnicoEmail('')
+    setRepresentanteDivulgacaoNome('')
+    setRepresentanteDivulgacaoTelefone('')
+    setRepresentanteDivulgacaoEmail('')
     setResponsaveisIds([])
     setPrioridade('MÉDIA')
   }
@@ -268,6 +348,160 @@ export function NovaDemanda({
             className="nova-demanda-input"
             placeholder="Ex: 5 (opcional)"
             aria-label="Número de crianças acolhidas"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Número total de crianças e adolescentes
+          <input
+            type="number"
+            min="0"
+            value={numeroTotalCriancasAdolescentes}
+            onChange={(e) => setNumeroTotalCriancasAdolescentes(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Ex: 30 (opcional)"
+            aria-label="Número total de crianças e adolescentes"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Nome da instituição
+          <input
+            type="text"
+            value={nomeInstituicao}
+            onChange={(e) => setNomeInstituicao(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Nome da instituição (opcional)"
+            aria-label="Nome da instituição"
+          />
+        </label>
+
+        {nomeInstituicao.trim().length > 0 && (
+          <>
+            <fieldset className="nova-demanda-acolhimento">
+              <legend className="nova-demanda-acolhimento-titulo">Tipo de acolhimento</legend>
+              <div className="nova-demanda-responsaveis">
+                {TIPOS_ACOLHIMENTO.map((tipo) => (
+                  <label key={tipo} className="nova-demanda-checkbox-item">
+                    <input
+                      type="checkbox"
+                      checked={tiposAcolhimento.includes(tipo)}
+                      onChange={() => toggleTipoAcolhimento(tipo)}
+                    />
+                    <span>{tipo}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <label className="nova-demanda-label">
+              Capacidade de acolhimento
+              <input
+                type="number"
+                min="0"
+                value={capacidadeAcolhimento}
+                onChange={(e) => setCapacidadeAcolhimento(e.target.value)}
+                className="nova-demanda-input"
+                placeholder="Ex: 20 (opcional)"
+                aria-label="Capacidade de acolhimento"
+              />
+            </label>
+          </>
+        )}
+
+        <label className="nova-demanda-label">
+          Nome de quem respondeu a pesquisa?
+          <input
+            type="text"
+            value={nomeRespondentePesquisa}
+            onChange={(e) => setNomeRespondentePesquisa(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Nome completo (opcional)"
+            aria-label="Nome de quem respondeu a pesquisa"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Quais serviços desejam?
+          <textarea
+            value={servicosDesejados}
+            onChange={(e) => setServicosDesejados(e.target.value)}
+            className="nova-demanda-textarea"
+            rows={3}
+            placeholder="Descreva os serviços desejados (opcional)"
+            aria-label="Quais serviços desejam"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Responsável técnico
+          <input
+            type="text"
+            value={responsavelTecnicoNome}
+            onChange={(e) => setResponsavelTecnicoNome(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Nome (opcional)"
+            aria-label="Responsável técnico"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Telefone do responsável técnico
+          <input
+            type="tel"
+            value={responsavelTecnicoTelefone}
+            onChange={(e) => setResponsavelTecnicoTelefone(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="(00) 00000-0000 (opcional)"
+            aria-label="Telefone do responsável técnico"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Email do responsável técnico
+          <input
+            type="email"
+            value={responsavelTecnicoEmail}
+            onChange={(e) => setResponsavelTecnicoEmail(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="email@exemplo.com (opcional)"
+            aria-label="Email do responsável técnico"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Representante de divulgação
+          <input
+            type="text"
+            value={representanteDivulgacaoNome}
+            onChange={(e) => setRepresentanteDivulgacaoNome(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="Nome (opcional)"
+            aria-label="Representante de divulgação"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Telefone do representante de divulgação
+          <input
+            type="tel"
+            value={representanteDivulgacaoTelefone}
+            onChange={(e) => setRepresentanteDivulgacaoTelefone(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="(00) 00000-0000 (opcional)"
+            aria-label="Telefone do representante de divulgação"
+          />
+        </label>
+
+        <label className="nova-demanda-label">
+          Email do representante de divulgação
+          <input
+            type="email"
+            value={representanteDivulgacaoEmail}
+            onChange={(e) => setRepresentanteDivulgacaoEmail(e.target.value)}
+            className="nova-demanda-input"
+            placeholder="email@exemplo.com (opcional)"
+            aria-label="Email do representante de divulgação"
           />
         </label>
 

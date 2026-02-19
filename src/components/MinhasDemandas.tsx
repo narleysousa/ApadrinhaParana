@@ -197,6 +197,11 @@ export function MinhasDemandas({
     })}`
   }
 
+  const formatarContato = (nome?: string, telefone?: string, email?: string) => {
+    const partes = [nome, telefone, email].filter((valor) => typeof valor === 'string' && valor.trim())
+    return partes.length > 0 ? partes.join(' | ') : '-'
+  }
+
   function getResponsaveisDemanda(demanda: Demanda): Responsavel[] {
     return Array.isArray(demanda.responsaveis) ? demanda.responsaveis : []
   }
@@ -419,6 +424,54 @@ export function MinhasDemandas({
                         <div className="minhas-tarefas-card-detalhes-item">
                           <dt>Nº de crianças acolhidas</dt>
                           <dd>{d.numeroCriancasAcolhidas}</dd>
+                        </div>
+                      )}
+                      {typeof d.numeroTotalCriancasAdolescentes === 'number' && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Nº total de crianças e adolescentes</dt>
+                          <dd>{d.numeroTotalCriancasAdolescentes}</dd>
+                        </div>
+                      )}
+                      {d.nomeInstituicao && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Instituição</dt>
+                          <dd>{d.nomeInstituicao}</dd>
+                        </div>
+                      )}
+                      {Array.isArray(d.tiposAcolhimento) && d.tiposAcolhimento.length > 0 && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Tipo de acolhimento</dt>
+                          <dd>{d.tiposAcolhimento.join(', ')}</dd>
+                        </div>
+                      )}
+                      {typeof d.capacidadeAcolhimento === 'number' && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Capacidade de acolhimento</dt>
+                          <dd>{d.capacidadeAcolhimento}</dd>
+                        </div>
+                      )}
+                      {d.nomeRespondentePesquisa && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Nome de quem respondeu</dt>
+                          <dd>{d.nomeRespondentePesquisa}</dd>
+                        </div>
+                      )}
+                      {d.servicosDesejados && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Serviços desejados</dt>
+                          <dd>{d.servicosDesejados}</dd>
+                        </div>
+                      )}
+                      {(d.responsavelTecnicoNome || d.responsavelTecnicoTelefone || d.responsavelTecnicoEmail) && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Responsável técnico</dt>
+                          <dd>{formatarContato(d.responsavelTecnicoNome, d.responsavelTecnicoTelefone, d.responsavelTecnicoEmail)}</dd>
+                        </div>
+                      )}
+                      {(d.representanteDivulgacaoNome || d.representanteDivulgacaoTelefone || d.representanteDivulgacaoEmail) && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Representante de divulgação</dt>
+                          <dd>{formatarContato(d.representanteDivulgacaoNome, d.representanteDivulgacaoTelefone, d.representanteDivulgacaoEmail)}</dd>
                         </div>
                       )}
                     </dl>
