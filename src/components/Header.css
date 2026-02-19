@@ -154,6 +154,29 @@
   color: var(--cor-primaria);
 }
 
+.header-notif-dropdown-acoes {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-notif-limpar {
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-card);
+  color: var(--cor-texto-sec);
+  border-radius: 6px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.header-notif-limpar:hover {
+  color: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria-light, rgba(37, 99, 235, 0.08));
+}
+
 .header-notif-vazio {
   padding: 1.25rem 1rem;
   margin: 0;

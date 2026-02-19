@@ -8,6 +8,7 @@ interface HeaderProps {
   onSair?: () => void
   notificacoesNaoLidas?: Notificacao[]
   onMarcarNotificacaoLida?: (id: string) => void
+  onLimparNotificacoes?: () => void
 }
 
 function IconLogo() {
@@ -42,6 +43,7 @@ export function Header({
   onSair,
   notificacoesNaoLidas = [],
   onMarcarNotificacaoLida,
+  onLimparNotificacoes,
 }: HeaderProps) {
   const [dropdownAberto, setDropdownAberto] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -89,9 +91,20 @@ export function Header({
             <div className="header-notif-dropdown" role="dialog" aria-label="Notificações">
               <div className="header-notif-dropdown-header">
                 <span>Notificações</span>
-                {totalNaoLidas > 0 && (
-                  <span className="header-notif-dropdown-count">{totalNaoLidas} nova(s)</span>
-                )}
+                <div className="header-notif-dropdown-acoes">
+                  {totalNaoLidas > 0 && (
+                    <span className="header-notif-dropdown-count">{totalNaoLidas} nova(s)</span>
+                  )}
+                  {totalNaoLidas > 0 && (
+                    <button
+                      type="button"
+                      className="header-notif-limpar"
+                      onClick={() => onLimparNotificacoes?.()}
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
               </div>
               {notificacoesNaoLidas.length === 0 ? (
                 <p className="header-notif-vazio">Nenhuma notificação nova.</p>

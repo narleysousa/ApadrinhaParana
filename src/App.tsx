@@ -802,6 +802,15 @@ function App() {
     )
   }, [])
 
+  const handleLimparNotificacoes = useCallback(() => {
+    if (!usuarioLogado) return
+    setNotificacoes((prev) =>
+      prev.map((n) =>
+        n.userId === usuarioLogado.id ? { ...n, lida: true } : n
+      )
+    )
+  }, [usuarioLogado])
+
   const handleExcluir = useCallback((id: string) => {
     if (window.confirm('Excluir esta demanda?')) {
       setDemandas((prev) => prev.filter((d) => d.id !== id))
@@ -1026,6 +1035,7 @@ function App() {
         onSair={handleSair}
         notificacoesNaoLidas={notificacoesNaoLidas}
         onMarcarNotificacaoLida={handleMarcarNotificacaoLida}
+        onLimparNotificacoes={handleLimparNotificacoes}
       />
 
       {nuvemHabilitada && (
