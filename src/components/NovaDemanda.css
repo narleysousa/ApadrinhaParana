@@ -148,6 +148,23 @@
   height: 16px;
 }
 
+.nova-demanda-checkbox-item--multiline {
+  align-items: flex-start;
+}
+
+.nova-demanda-checkbox-item--multiline input {
+  margin-top: 0.2rem;
+}
+
+.nova-demanda-servicos-opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
 .nova-demanda-acolhimento {
   border: 1px solid var(--cor-borda);
   border-radius: 8px;

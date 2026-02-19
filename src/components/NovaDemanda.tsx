@@ -4,6 +4,18 @@ import './NovaDemanda.css'
 
 const PRIORIDADES: Prioridade[] = ['ALTA', 'MÉDIA', 'BAIXA']
 const TIPOS_ACOLHIMENTO = ['Abrigo', 'Casa Lar', 'Família acolhedora'] as const
+const OPCAO_TODOS_SERVICOS = 'Todos os serviços'
+const SERVICOS_DESEJADOS_OPCOES = [
+  'Curso preparatório online de padrinhos, certificado pela EJUD',
+  'Entrevistas e acompanhamento de padrinhos pela equipe, incluindo cadastro e análise de antecedentes',
+  'Encontros de acompanhamento entre padrinhos de diferentes Comarcas',
+  'Encontros entre instituições de acolhimento de diferentes Comarcas',
+  'Apoio para divulgação presencial (folders, cartazes, orientação de boas práticas e mobilização de divulgadores voluntários)',
+  'Apoio para divulgação online (anúncios patrocinados e orientações estratégicas)',
+  'Plataforma Conecte Afetos para exibição de vídeos e informações de adolescentes disponíveis ao apadrinhamento',
+  'Todas as alternativas anteriores (se a Comarca já tiver programa, o Apadrinha Paraná funciona em paralelo)',
+  OPCAO_TODOS_SERVICOS,
+] as const
 
 interface NovaDemandaProps {
   projetos: Projeto[]
@@ -54,7 +66,7 @@ export function NovaDemanda({
   const [nomeInstituicao, setNomeInstituicao] = useState('')
   const [tiposAcolhimento, setTiposAcolhimento] = useState<string[]>([])
   const [nomeRespondentePesquisa, setNomeRespondentePesquisa] = useState('')
-  const [servicosDesejados, setServicosDesejados] = useState('')
+  const [servicosDesejadosSelecionados, setServicosDesejadosSelecionados] = useState<string[]>([])
   const [responsavelTecnicoNome, setResponsavelTecnicoNome] = useState('')
   const [responsavelTecnicoTelefone, setResponsavelTecnicoTelefone] = useState('')
   const [responsavelTecnicoEmail, setResponsavelTecnicoEmail] = useState('')
@@ -97,6 +109,18 @@ export function NovaDemanda({
     )
   }
 
+  const toggleServicoDesejado = (servico: string) => {
+    setServicosDesejadosSelecionados((prev) => {
+      if (servico === OPCAO_TODOS_SERVICOS) {
+        return prev.includes(OPCAO_TODOS_SERVICOS) ? [] : [OPCAO_TODOS_SERVICOS]
+      }
+      const semTodos = prev.filter((item) => item !== OPCAO_TODOS_SERVICOS)
+      return semTodos.includes(servico)
+        ? semTodos.filter((item) => item !== servico)
+        : [...semTodos, servico]
+    })
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!titulo.trim() || !projetoId) return
@@ -136,7 +160,10 @@ export function NovaDemanda({
       nomeInstituicao: textoOpcional(nomeInstituicao),
       tiposAcolhimento: nomeInstituicao.trim() ? tiposAcolhimento : undefined,
       nomeRespondentePesquisa: textoOpcional(nomeRespondentePesquisa),
-      servicosDesejados: textoOpcional(servicosDesejados),
+      servicosDesejados:
+        servicosDesejadosSelecionados.length > 0
+          ? servicosDesejadosSelecionados.join('; ')
+          : undefined,
       responsavelTecnicoNome: textoOpcional(responsavelTecnicoNome),
       responsavelTecnicoTelefone: textoOpcional(responsavelTecnicoTelefone),
       responsavelTecnicoEmail: textoOpcional(responsavelTecnicoEmail),
@@ -154,7 +181,7 @@ export function NovaDemanda({
     setNomeInstituicao('')
     setTiposAcolhimento([])
     setNomeRespondentePesquisa('')
-    setServicosDesejados('')
+    setServicosDesejadosSelecionados([])
     setResponsavelTecnicoNome('')
     setResponsavelTecnicoTelefone('')
     setResponsavelTecnicoEmail('')
@@ -423,14 +450,18 @@ export function NovaDemanda({
 
         <label className="nova-demanda-label">
           Quais serviços desejam?
-          <textarea
-            value={servicosDesejados}
-            onChange={(e) => setServicosDesejados(e.target.value)}
-            className="nova-demanda-textarea"
-            rows={3}
-            placeholder="Descreva os serviços desejados (opcional)"
-            aria-label="Quais serviços desejam"
-          />
+          <div className="nova-demanda-servicos-opcoes">
+            {SERVICOS_DESEJADOS_OPCOES.map((servico) => (
+              <label key={servico} className="nova-demanda-checkbox-item nova-demanda-checkbox-item--multiline">
+                <input
+                  type="checkbox"
+                  checked={servicosDesejadosSelecionados.includes(servico)}
+                  onChange={() => toggleServicoDesejado(servico)}
+                />
+                <span>{servico}</span>
+              </label>
+            ))}
+          </div>
         </label>
 
         <label className="nova-demanda-label">
