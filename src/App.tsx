@@ -916,6 +916,9 @@ function App() {
 
   const handleAgentsExcluir = useCallback((id: string) => {
     setAgents((prev) => prev.filter((a) => a.id !== id))
+    setDemandas((prev) =>
+      prev.map((d) => (d.agentId === id ? { ...d, agentId: undefined } : d))
+    )
   }, [])
 
   const handleAutenticar = useCallback(
