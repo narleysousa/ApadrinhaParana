@@ -53,6 +53,15 @@ function dataIsoSegura(valor: unknown): string {
   return new Date().toISOString()
 }
 
+function dataIsoOpcional(valor: unknown): string | undefined {
+  if (typeof valor !== 'string') return undefined
+  const texto = valor.trim()
+  if (!texto) return undefined
+  const data = new Date(texto)
+  if (Number.isNaN(data.getTime())) return undefined
+  return data.toISOString()
+}
+
 function prioridadeSegura(valor: unknown): Prioridade {
   return valor === 'ALTA' || valor === 'MÉDIA' || valor === 'BAIXA' ? valor : 'MÉDIA'
 }
@@ -302,6 +311,9 @@ function normalizarDemandas(
     const representanteDivulgacaoEmail = textoLimpo(entrada.representanteDivulgacaoEmail)
 
     const agentId = textoLimpo(entrada.agentId)
+    const finalizada = Boolean(entrada.finalizada)
+    const finalizadaEm = dataIsoOpcional(entrada.finalizadaEm)
+    const reabertaEm = dataIsoOpcional(entrada.reabertaEm)
     const demanda: Demanda = {
       id,
       titulo,
@@ -311,12 +323,18 @@ function normalizarDemandas(
       descricao: textoLimpo(entrada.descricao),
       progresso,
       criadaEm: dataIsoSegura(entrada.criadaEm),
-      finalizada: Boolean(entrada.finalizada),
+      finalizada,
       comentarios: normalizarComentarios(entrada.comentarios, usuariosPorId),
     }
 
     if (agentId && agentIds.has(agentId)) {
       demanda.agentId = agentId
+    }
+    if (finalizadaEm) {
+      demanda.finalizadaEm = finalizadaEm
+    }
+    if (reabertaEm) {
+      demanda.reabertaEm = reabertaEm
     }
 
     if (typeof numeroCriancasAcolhidas === 'number') {
@@ -818,7 +836,24 @@ function App() {
   }, [])
 
   const handleToggleFinalizada = useCallback((id: string) => {
-    setDemandas((prev) => prev.map((d) => (d.id === id ? { ...d, finalizada: !d.finalizada } : d)))
+    const agora = new Date().toISOString()
+    setDemandas((prev) =>
+      prev.map((d) => {
+        if (d.id !== id) return d
+        if (d.finalizada) {
+          return {
+            ...d,
+            finalizada: false,
+            reabertaEm: agora,
+          }
+        }
+        return {
+          ...d,
+          finalizada: true,
+          finalizadaEm: agora,
+        }
+      })
+    )
   }, [])
 
   const handleAdicionarComentario = useCallback(

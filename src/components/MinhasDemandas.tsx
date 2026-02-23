@@ -420,6 +420,22 @@ export function MinhasDemandas({
                         <dt>Prioridade</dt>
                         <dd>{d.prioridade}</dd>
                       </div>
+                      <div className="minhas-tarefas-card-detalhes-item">
+                        <dt>Criada em</dt>
+                        <dd>{formatarDataHora(d.criadaEm)}</dd>
+                      </div>
+                      {d.finalizadaEm && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Finalizada em</dt>
+                          <dd>{formatarDataHora(d.finalizadaEm)}</dd>
+                        </div>
+                      )}
+                      {d.reabertaEm && (
+                        <div className="minhas-tarefas-card-detalhes-item">
+                          <dt>Reaberta em</dt>
+                          <dd>{formatarDataHora(d.reabertaEm)}</dd>
+                        </div>
+                      )}
                       {typeof d.numeroCriancasAcolhidas === 'number' && (
                         <div className="minhas-tarefas-card-detalhes-item">
                           <dt>Nº de crianças acolhidas</dt>

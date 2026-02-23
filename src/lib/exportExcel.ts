@@ -1,5 +1,5 @@
 import type { Demanda, Agent } from '../types'
-import { formatarData } from './utils'
+import { formatarDataHora } from './utils'
 
 interface DemandaExcel {
     'Título': string
@@ -23,6 +23,8 @@ interface DemandaExcel {
     'Progresso (%)': number
     'Status': string
     'Criada em': string
+    'Finalizada em': string
+    'Reaberta em': string
     'Comentários': number
 }
 
@@ -59,7 +61,9 @@ function formatarDemandaParaExcel(demanda: Demanda, agents: Agent[]): DemandaExc
         'Descrição': demanda.descricao || '-',
         'Progresso (%)': demanda.progresso ?? 0,
         'Status': demanda.finalizada ? 'Finalizada' : 'Em andamento',
-        'Criada em': formatarData(demanda.criadaEm),
+        'Criada em': formatarDataHora(demanda.criadaEm),
+        'Finalizada em': demanda.finalizadaEm ? formatarDataHora(demanda.finalizadaEm) : '-',
+        'Reaberta em': demanda.reabertaEm ? formatarDataHora(demanda.reabertaEm) : '-',
         'Comentários': demanda.comentarios?.length ?? 0,
     }
 }
@@ -102,7 +106,9 @@ export async function exportarDemandasExcel(
         { wch: 50 }, // Descrição
         { wch: 14 }, // Progresso
         { wch: 14 }, // Status
-        { wch: 12 }, // Criada em
+        { wch: 20 }, // Criada em
+        { wch: 20 }, // Finalizada em
+        { wch: 20 }, // Reaberta em
         { wch: 12 }, // Comentários
     ]
     worksheet['!cols'] = colWidths

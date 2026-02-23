@@ -46,6 +46,8 @@ export interface Demanda {
   progresso: number
   criadaEm: string
   finalizada?: boolean
+  finalizadaEm?: string
+  reabertaEm?: string
   agentId?: string
   numeroCriancasAcolhidas?: number
   numeroTotalCriancasAdolescentes?: number

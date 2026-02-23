@@ -30,3 +30,13 @@ export function formatarData(iso: string): string {
     year: 'numeric',
   })
 }
+
+/** Formata data e hora para exibição em pt-BR. Retorna '-' se a data for inválida. */
+export function formatarDataHora(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '-'
+  return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`
+}
