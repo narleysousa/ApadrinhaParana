@@ -832,6 +832,7 @@ function App() {
   const handleExcluir = useCallback((id: string) => {
     if (window.confirm('Excluir esta demanda?')) {
       setDemandas((prev) => prev.filter((d) => d.id !== id))
+      setNotificacoes((prev) => prev.filter((n) => n.demandaId !== id))
     }
   }, [])
 
